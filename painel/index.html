@@ -279,6 +279,41 @@ body {
 #loading { position:fixed; inset:0; background:rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; z-index:9999; font-size:14px; font-weight:700; color:var(--structure); }
 
 /* ===================================================
+   TELA DE SENHA
+   =================================================== */
+#password-screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000;
+}
+#password-card {
+  width: 320px;
+  padding: 36px 32px 32px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--structure);
+}
+#pwd-logo  { font-size:10px; font-weight:700; color:var(--text-cap); letter-spacing:.1em; text-transform:uppercase; text-align:center; margin-bottom:8px; }
+#pwd-title { font-size:20px; font-weight:700; color:var(--structure); text-align:center; line-height:1.2; margin-bottom:4px; }
+#pwd-sub   { font-size:12px; color:var(--text-cap); text-align:center; margin-bottom:28px; }
+#pwd-label { font-size:10px; font-weight:700; color:var(--structure); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+#pwd-input {
+  width:100%; padding:9px 10px;
+  border:1px solid var(--border);
+  font-family:'IBM Plex Sans',sans-serif; font-size:14px;
+  outline:none; margin-bottom:8px; letter-spacing:.1em;
+}
+#pwd-input:focus { border-color:var(--structure); }
+#pwd-error { font-size:11px; color:var(--emphasis); font-weight:700; min-height:18px; margin-bottom:10px; }
+#pwd-submit {
+  width:100%; padding:10px;
+  background:var(--structure); color:#fff; border:none;
+  font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:700;
+  cursor:pointer; text-transform:uppercase; letter-spacing:.1em;
+}
+#pwd-submit:hover { background:#263d6b; }
+
+/* ===================================================
    MOBILE — ocultar elementos mobile no desktop
    =================================================== */
 #mobile-topbar, #mobile-nav, #drawer-overlay { display: none; }
@@ -425,6 +460,19 @@ body {
 </style>
 </head>
 <body>
+
+<!-- Tela de senha -->
+<div id="password-screen">
+  <div id="password-card">
+    <div id="pwd-logo">SEE / MG</div>
+    <div id="pwd-title">Trilhas de Futuro<br>7ª edição</div>
+    <div id="pwd-sub">Priorização Curso × Município</div>
+    <div id="pwd-label">Senha de acesso</div>
+    <input id="pwd-input" type="password" placeholder="••••••••" autocomplete="off">
+    <div id="pwd-error"></div>
+    <button id="pwd-submit" type="button">Entrar</button>
+  </div>
+</div>
 
 <!-- Top bar mobile -->
 <div id="mobile-topbar">
@@ -1088,6 +1136,7 @@ document.getElementById('list-search').addEventListener('input',function(){
 /* ============================================================
    CARREGAR DADOS
    ============================================================ */
+function loadData() {
 Promise.all([
   fetch('dados/trilhas.json').then(r=>r.json()),
   fetch('dados/municipios.json').then(r=>r.json()),
@@ -1123,6 +1172,7 @@ Promise.all([
   document.getElementById('loading').textContent='Erro ao carregar dados: '+err.message;
   console.error(err);
 });
+} // fim loadData()
 
 /* ============================================================
    MOBILE — BADGE DE FILTROS ATIVOS
@@ -1203,6 +1253,47 @@ function updateFilterBadge() {
 
   // Ativação inicial
   if (window.innerWidth <= 768) switchTab('map');
+})();
+
+/* ============================================================
+   SENHA DE ACESSO
+   ============================================================ */
+(function() {
+  const PASS = '12345678';
+
+  function unlock() {
+    document.getElementById('password-screen').style.display = 'none';
+    sessionStorage.setItem('unlocked', '1');
+    loadData();
+  }
+
+  // Sessão já autenticada — pular tela de senha
+  if (sessionStorage.getItem('unlocked') === '1') {
+    unlock();
+    return;
+  }
+
+  const input  = document.getElementById('pwd-input');
+  const error  = document.getElementById('pwd-error');
+  const btn    = document.getElementById('pwd-submit');
+
+  function check() {
+    if (input.value === PASS) {
+      unlock();
+    } else {
+      error.textContent = 'Senha incorreta. Tente novamente.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', check);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { check(); }
+    else { error.textContent = ''; }
+  });
+
+  input.focus();
 })();
 </script>
 </body>
