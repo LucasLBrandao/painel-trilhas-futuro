@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trilhas de Futuro — Priorização SEE/MG</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -276,9 +277,170 @@ body {
    LOADING
    =================================================== */
 #loading { position:fixed; inset:0; background:rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; z-index:9999; font-size:14px; font-weight:700; color:var(--structure); }
+
+/* ===================================================
+   MOBILE — ocultar elementos mobile no desktop
+   =================================================== */
+#mobile-topbar, #mobile-nav, #drawer-overlay { display: none; }
+
+/* ===================================================
+   RESPONSIVO — ≤ 768px
+   =================================================== */
+@media (max-width: 768px) {
+
+  body { height: 100dvh; }
+
+  #app {
+    flex-direction: column;
+    height: 100dvh;
+    padding-top: 50px;
+    padding-bottom: 52px;
+  }
+
+  /* --- Top bar --- */
+  #mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 50px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 300;
+    background: var(--bg);
+    border-bottom: 2px solid var(--structure);
+  }
+  #mobile-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--structure);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    position: relative;
+  }
+  #mobile-filter-btn:active { background: var(--surface-note); }
+  #filter-badge {
+    background: var(--emphasis);
+    color: #fff;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #filter-badge.visible { display: flex; }
+
+  /* --- Drawer overlay --- */
+  #drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 499;
+  }
+  #drawer-overlay.open { display: block; }
+
+  /* --- Sidebar → Drawer deslizante --- */
+  #col-filters {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: min(300px, 88vw);
+    z-index: 500;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    transform: translateX(-110%);
+    transition: transform 0.25s ease;
+    border-right: 1px solid var(--border);
+  }
+  #col-filters.open { transform: translateX(0); }
+
+  /* --- Painéis: um de cada vez --- */
+  #col-map, #col-munic, #col-list {
+    display: none;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border-right: none;
+  }
+  #col-map.mob-active,
+  #col-munic.mob-active,
+  #col-list.mob-active { display: flex; }
+
+  /* --- Cards compactos no mobile --- */
+  .card { padding: 8px 10px; }
+  .card-value { font-size: 18px; }
+  .card-sub { font-size: 9px; }
+
+  /* --- Bottom nav --- */
+  #mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    z-index: 300;
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-cap);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    border-top: 3px solid transparent;
+    padding-top: 2px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-tab.active { color: var(--structure); border-top-color: var(--structure); }
+
+  /* --- Tooltip: abre para baixo no mobile (evita ser cortado) --- */
+  .help-icon .help-tooltip {
+    bottom: auto;
+    top: calc(100% + 6px);
+    left: 0;
+    transform: none;
+    width: 220px;
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- Top bar mobile -->
+<div id="mobile-topbar">
+  <div>
+    <div class="sidebar-logo">SEE / MG</div>
+    <div class="sidebar-title" style="font-size:12px;">Trilhas de Futuro — 7ª ed.</div>
+  </div>
+  <button id="mobile-filter-btn" type="button">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+    Filtros
+    <span id="filter-badge"></span>
+  </button>
+</div>
+
+<!-- Overlay do drawer de filtros -->
+<div id="drawer-overlay"></div>
 
 <div id="loading">Carregando dados…</div>
 
@@ -423,6 +585,22 @@ body {
 
 </div>
 
+<!-- Bottom nav mobile -->
+<nav id="mobile-nav">
+  <button class="mob-tab active" data-tab="map">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+    <span>Mapa</span>
+  </button>
+  <button class="mob-tab" data-tab="munic">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+    <span>Municípios</span>
+  </button>
+  <button class="mob-tab" data-tab="list">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span>Lista</span>
+  </button>
+</nav>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ============================================================
@@ -512,6 +690,7 @@ function applyFilters() {
   updateMap();
   updateMunicTable();
   updateList();
+  if (typeof updateFilterBadge === 'function') updateFilterBadge();
 }
 
 /* ============================================================
@@ -944,6 +1123,87 @@ Promise.all([
   document.getElementById('loading').textContent='Erro ao carregar dados: '+err.message;
   console.error(err);
 });
+
+/* ============================================================
+   MOBILE — BADGE DE FILTROS ATIVOS
+   ============================================================ */
+function updateFilterBadge() {
+  const count =
+    (filters.sres.size        > 0 ? 1 : 0) +
+    (filters.mesos.size       > 0 ? 1 : 0) +
+    (filters.municipio            ? 1 : 0) +
+    (filters.eixos.size       > 0 ? 1 : 0) +
+    (filters.curso                ? 1 : 0) +
+    (filters.prioritarios         ? 1 : 0) +
+    (filters.pop100               ? 1 : 0);
+  const badge = document.getElementById('filter-badge');
+  badge.textContent = count || '';
+  badge.classList.toggle('visible', count > 0);
+}
+
+/* ============================================================
+   MOBILE — NAVEGAÇÃO POR ABAS E DRAWER DE FILTROS
+   ============================================================ */
+(function initMobile() {
+  const PANELS = { map: 'col-map', munic: 'col-munic', list: 'col-list' };
+  let activeTab = 'map';
+
+  function switchTab(tab) {
+    activeTab = tab;
+    Object.values(PANELS).forEach(id =>
+      document.getElementById(id).classList.remove('mob-active')
+    );
+    document.getElementById(PANELS[tab]).classList.add('mob-active');
+    document.querySelectorAll('.mob-tab').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tab)
+    );
+    // Leaflet precisa recalcular o tamanho ao tornar o mapa visível
+    if (tab === 'map') setTimeout(() => map.invalidateSize(), 60);
+  }
+
+  function openDrawer() {
+    document.getElementById('col-filters').classList.add('open');
+    document.getElementById('drawer-overlay').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('col-filters').classList.remove('open');
+    document.getElementById('drawer-overlay').classList.remove('open');
+  }
+
+  document.getElementById('mobile-filter-btn').addEventListener('click', openDrawer);
+  document.getElementById('drawer-overlay').addEventListener('click', closeDrawer);
+
+  // Fechar drawer ao clicar em "Limpar filtros"
+  document.getElementById('btn-clear').addEventListener('click', closeDrawer, { capture: false });
+
+  document.querySelectorAll('.mob-tab').forEach(btn =>
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+  );
+
+  // Inicializa a aba correta dependendo do viewport
+  function onResize() {
+    if (window.innerWidth <= 768) {
+      // Garantir que a aba ativa está visível
+      Object.values(PANELS).forEach(id =>
+        document.getElementById(id).classList.remove('mob-active')
+      );
+      document.getElementById(PANELS[activeTab]).classList.add('mob-active');
+      if (activeTab === 'map') setTimeout(() => map.invalidateSize(), 60);
+    } else {
+      // Desktop: remover classes mobile dos painéis para voltar ao layout normal
+      Object.values(PANELS).forEach(id =>
+        document.getElementById(id).classList.remove('mob-active')
+      );
+      closeDrawer();
+    }
+  }
+
+  window.addEventListener('resize', onResize);
+
+  // Ativação inicial
+  if (window.innerWidth <= 768) switchTab('map');
+})();
 </script>
 </body>
 </html>
