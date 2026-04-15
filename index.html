@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -432,7 +432,8 @@ body {
   /* --- col-map sempre visível (cards + tab bar), mapa condicional --- */
   #col-map {
     display: flex;
-    flex: none;   /* flex: 0 0 auto — não herda flex-basis:0 do desktop */
+    flex: none;
+    order: -1;    /* garante que cards+tabs ficam sempre no topo no mobile */
     width: 100%;
     border-right: none;
   }
