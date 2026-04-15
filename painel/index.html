@@ -198,8 +198,10 @@ body {
 /* ===================================================
    COLUNA 4 — CURSOS PRIORITÁRIOS
    =================================================== */
-#list-header { flex-shrink:0; display:flex; align-items:baseline; gap:8px; padding:7px 14px; border-bottom:1px solid var(--border); }
+#list-header { flex-shrink:0; padding:8px 14px 6px; border-bottom:1px solid var(--border); }
+#list-header-top { display:flex; align-items:baseline; gap:8px; }
 #list-count  { font-size:11px; color:var(--text-cap); }
+#list-legend { font-size:10px; color:var(--text-cap); margin-top:4px; font-style:italic; }
 
 #list-munic-note {
   flex-shrink: 0;
@@ -403,8 +405,11 @@ body {
   <!-- ===== COL 4: CURSOS PRIORITÁRIOS ===== -->
   <div id="col-list">
     <div id="list-header">
-      <span class="col-title">Cursos prioritários</span>
-      <span id="list-count"></span>
+      <div id="list-header-top">
+        <span class="col-title" style="font-size:13px; letter-spacing:.05em;">Lista de prioridades Trilhas 7</span>
+        <span id="list-count"></span>
+      </div>
+      <div id="list-legend">município — curso · mesorregião · SRE</div>
     </div>
     <div id="list-munic-note">
       <span id="list-munic-nome"></span>
@@ -794,7 +799,7 @@ function renderList(data, q) {
       <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
       <div class="list-body">
         <div class="list-titulo">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
-        <div class="list-loc">${d.dc_mesorregiao||'—'} · SRE ${d.sre||'—'}</div>
+        <div class="list-loc">${d.dc_mesorregiao||'—'} · ${d.sre||'—'}</div>
         <div class="list-meta">
           <span style="background:${bg};color:${fc};padding:1px 7px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;">${d.bloco||''}</span>
           ${d.fl_municipio_prioritario ? `<span class="list-prior">setores prioritários</span>` : ''}
