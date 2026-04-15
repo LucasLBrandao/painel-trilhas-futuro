@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Trilhas de Futuro — Priorização SEE/MG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue1: #174A7E;
+  --blue3: #94B2D7;
+  --gray9: #BFBEBE;
+  --green: #2E8B57;
+  --yellow: #F0C040;
+  --structure: #1B2A4A;
+  --emphasis: #7B1F3A;
+  --positive: #2E6B3E;
+  --bg: #FFFFFF;
+  --text: #1C1C1C;
+  --text-sec: #555555;
+  --text-cap: #888888;
+  --border: #DDDDDD;
+  --surface-note: #EEF2F7;
+}
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===================================================
+   LAYOUT — 4 colunas, 100vh
+   =================================================== */
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Col 1 — Filtros */
+#col-filters {
+  width: 300px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow-y: auto; background: var(--bg);
+}
+
+/* Col 2 — Mapa */
+#col-map {
+  flex: 1;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* Col 3 — Municípios */
+#col-munic {
+  width: 250px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* Col 4 — Cursos */
+#col-list {
+  width: 400px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden; background: var(--bg);
+}
+
+/* ===================================================
+   COLUNA 1 — FILTROS
+   =================================================== */
+.sidebar-header {
+  padding: 16px 14px 12px;
+  border-bottom: 2px solid var(--structure);
+  flex-shrink: 0;
+}
+.sidebar-logo { font-size: 10px; font-weight: 700; color: var(--text-cap); letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
+.sidebar-title { font-size: 14px; font-weight: 700; color: var(--structure); }
+.sidebar-subtitle { font-size: 11px; color: var(--text-cap); margin-top: 2px; }
+
+.filters { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.filter-group { display: flex; flex-direction: column; gap: 4px; }
+.filter-label { font-size: 10px; font-weight: 700; color: var(--structure); text-transform: uppercase; letter-spacing: .08em; }
+
+.checkbox-group { display: flex; flex-direction: column; gap: 4px; }
+.checkbox-item { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12px; }
+.checkbox-item input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; }
+
+.toggle-item { display:flex; align-items:flex-start; gap:7px; cursor:pointer; font-size:12px; color:var(--text-sec); line-height:1.4; }
+.toggle-item input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; margin-top:1px; }
+
+.badge { display:inline-block; padding:1px 7px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; }
+.badge-01 { background:var(--blue1);  color:#fff; }
+.badge-02 { background:var(--green);  color:#fff; }
+.badge-03 { background:var(--yellow); color:var(--text); }
+.badge-04 { background:#E07B39;       color:#fff; }
+
+.multi-select { position:relative; }
+.ms-button { width:100%; padding:5px 8px; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--text); cursor:pointer; text-align:left; display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.ms-button span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ms-button::after { content:'▾'; font-size:10px; color:var(--text-cap); flex-shrink:0; }
+.ms-button:hover { border-color:var(--structure); }
+.ms-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:1000; background:var(--bg); border:1px solid var(--border); border-top:none; max-height:180px; overflow-y:auto; }
+.ms-dropdown.open { display:block; }
+.ms-search { width:100%; padding:5px 8px; border:none; border-bottom:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
+.ms-option { display:flex; align-items:center; gap:7px; padding:4px 8px; cursor:pointer; font-size:12px; }
+.ms-option:hover { background:var(--surface-note); }
+.ms-option input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; }
+
+.search-select { position:relative; }
+.ss-input { width:100%; padding:5px 8px; border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--text); outline:none; background:var(--bg); }
+.ss-input:focus { border-color:var(--structure); }
+.ss-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:1000; background:var(--bg); border:1px solid var(--border); border-top:none; max-height:180px; overflow-y:auto; }
+.ss-dropdown.open { display:block; }
+.ss-option { padding:4px 8px; cursor:pointer; font-size:12px; }
+.ss-option:hover { background:var(--surface-note); }
+.ss-option[data-value=""] { color:var(--text-cap); border-bottom:1px solid var(--border); }
+
+#btn-clear { padding:7px 0; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:700; color:var(--emphasis); cursor:pointer; width:100%; text-align:center; }
+#btn-clear:hover { background:var(--surface-note); border-color:var(--emphasis); }
+
+/* ===================================================
+   COLUNA 2 — MAPA
+   =================================================== */
+#cards {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.card { padding:11px 14px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); border-left:3px solid var(--structure); }
+.card:nth-child(2) { border-left-color:var(--blue1); }
+.card:nth-child(3) { border-left-color:var(--blue3); border-bottom:none; }
+.card:nth-child(4) { border-left-color:var(--green); border-bottom:none; border-right:none; }
+.card-label { font-size:10px; font-weight:700; color:var(--text-cap); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+.card-value { font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:700; color:var(--structure); line-height:1; }
+.card-sub { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-sec); margin-top:3px; }
+
+#map-toolbar { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:7px 12px; border-bottom:1px solid var(--border); }
+.col-title { font-size:10px; font-weight:700; color:var(--structure); text-transform:uppercase; letter-spacing:.08em; }
+#map-mode-toggle { display:flex; }
+.mode-btn { padding:4px 12px; border:1px solid var(--border); background:var(--bg); font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--text-sec); cursor:pointer; }
+.mode-btn:first-child { border-right:none; }
+.mode-btn.active { background:var(--structure); color:#fff; border-color:var(--structure); }
+.mode-btn:hover:not(.active) { background:var(--surface-note); }
+
+#map-wrap { flex:1; min-height:0; }
+#map { width:100%; height:100%; }
+
+.leaflet-tooltip { font-family:'IBM Plex Sans',sans-serif; font-size:12px; line-height:1.5; border:1px solid var(--border); padding:6px 10px; }
+
+/* ===================================================
+   COLUNA 3 — TABELA MUNICÍPIOS
+   =================================================== */
+.col-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.col-sub { font-size:11px; color:var(--text-cap); }
+
+#munic-body { flex:1; overflow-y:auto; min-height:0; }
+
+.munic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+.munic-row:hover { background: var(--surface-note); }
+.munic-row.selected { background: var(--surface-note); border-left-color: var(--blue1); }
+.munic-row.zero { border-left-color: var(--emphasis); }
+.munic-row.zero .munic-nome { color: var(--emphasis); }
+.munic-row.zero .munic-count { color: var(--emphasis); }
+
+.munic-info { flex:1; min-width:0; }
+.munic-nome  { font-size:12px; font-weight:700; color:var(--blue1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.munic-sre   { font-size:10px; color:var(--text-cap); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.munic-pop   { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-cap); margin-top:1px; }
+.munic-right { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; gap:2px; }
+.munic-count { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700; color:var(--structure); }
+.munic-count-label { font-size:9px; color:var(--text-cap); text-transform:uppercase; letter-spacing:.04em; }
+
+/* ===================================================
+   COLUNA 4 — CURSOS PRIORITÁRIOS
+   =================================================== */
+#list-header { flex-shrink:0; display:flex; align-items:baseline; gap:8px; padding:7px 14px; border-bottom:1px solid var(--border); }
+#list-count  { font-size:11px; color:var(--text-cap); }
+
+#list-munic-note {
+  flex-shrink: 0;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 14px;
+  background: var(--surface-note);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--structure);
+  font-weight: 700;
+}
+#list-munic-note.visible { display: flex; }
+#btn-clear-munic { background:none; border:none; cursor:pointer; font-size:14px; color:var(--text-cap); line-height:1; padding:0 2px; }
+#btn-clear-munic:hover { color:var(--emphasis); }
+
+#list-search-wrap { flex-shrink:0; padding:6px 14px; border-bottom:1px solid var(--border); }
+#list-search { width:100%; padding:5px 8px; border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
+#list-search:focus { border-color:var(--structure); }
+
+#course-list { flex:1; overflow-y:auto; min-height:0; }
+
+.list-item { display:flex; align-items:flex-start; gap:10px; padding:8px 14px; border-bottom:1px solid var(--border); }
+.list-item:last-child { border-bottom:none; }
+.list-item:hover { background:var(--surface-note); }
+.list-rank   { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; color:var(--text-cap); min-width:28px; padding-top:2px; flex-shrink:0; text-align:right; }
+.list-body   { flex:1; min-width:0; }
+.list-titulo { font-size:12px; font-weight:700; color:var(--structure); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-loc    { font-size:11px; color:var(--text-sec); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-meta   { margin-top:3px; display:flex; align-items:center; gap:5px; }
+.list-prior  { font-size:10px; color:var(--positive); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.list-empty  { padding:24px 14px; font-size:12px; color:var(--text-cap); text-align:center; }
+
+/* Ícone de dúvida com tooltip */
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px; height: 14px;
+  border: 1px solid var(--text-cap);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-cap);
+  cursor: default;
+  flex-shrink: 0;
+  position: relative;
+  line-height: 1;
+  font-style: normal;
+}
+.help-icon .help-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--structure);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 7px 10px;
+  width: 220px;
+  z-index: 2000;
+  pointer-events: none;
+  white-space: normal;
+}
+.help-icon:hover .help-tooltip { display: block; }
+
+/* ===================================================
+   LOADING
+   =================================================== */
+#loading { position:fixed; inset:0; background:rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; z-index:9999; font-size:14px; font-weight:700; color:var(--structure); }
+</style>
+</head>
+<body>
+
+<div id="loading">Carregando dados…</div>
+
+<div id="app">
+
+  <!-- ===== COL 1: FILTROS ===== -->
+  <aside id="col-filters">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">SEE / MG</div>
+      <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
+      <div class="sidebar-subtitle">Priorização Curso × Município</div>
+    </div>
+    <div class="filters">
+
+      <div class="filter-group">
+        <div class="filter-label">Bloco</div>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 01" checked><span class="badge badge-01">Bloco 01</span></label>
+          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 02" checked><span class="badge badge-02">Bloco 02</span></label>
+          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 03" checked><span class="badge badge-03">Bloco 03</span></label>
+          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 04" checked><span class="badge badge-04">Bloco 04</span></label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="toggle-item">
+          <input type="checkbox" id="toggle-prioritarios">
+          <span>Apenas setores prioritários</span>
+          <i class="help-icon">?<span class="help-tooltip">Setores prioritários: agropecuária, mineração e energias renováveis. Inclui também os municípios do Vale do Lítio, a partir de estudo realizado pelo Instituto Itaú Educação e Trabalho.</span></i>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <label class="toggle-item"><input type="checkbox" id="toggle-pop100"><span>Top 100 municípios por população</span></label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">SRE</div>
+        <div class="multi-select" id="ms-sre">
+          <button class="ms-button" type="button"><span>Todas</span></button>
+          <div class="ms-dropdown"><input class="ms-search" type="text" placeholder="Buscar SRE…"><div class="ms-options"></div></div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Mesorregião</div>
+        <div class="multi-select" id="ms-meso">
+          <button class="ms-button" type="button"><span>Todas</span></button>
+          <div class="ms-dropdown"><input class="ms-search" type="text" placeholder="Buscar…"><div class="ms-options"></div></div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Município</div>
+        <div class="search-select" id="ss-municipio">
+          <input class="ss-input" type="text" placeholder="Buscar município…" autocomplete="off">
+          <div class="ss-dropdown"><div class="ss-options"></div></div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Eixo Tecnológico</div>
+        <div class="multi-select" id="ms-eixo">
+          <button class="ms-button" type="button"><span>Todos</span></button>
+          <div class="ms-dropdown"><input class="ms-search" type="text" placeholder="Buscar…"><div class="ms-options"></div></div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Curso Técnico</div>
+        <div class="search-select" id="ss-curso">
+          <input class="ss-input" type="text" placeholder="Buscar curso…" autocomplete="off">
+          <div class="ss-dropdown"><div class="ss-options"></div></div>
+        </div>
+      </div>
+
+      <button id="btn-clear" type="button">Limpar filtros</button>
+    </div>
+  </aside>
+
+  <!-- ===== COL 2: MAPA ===== -->
+  <div id="col-map">
+    <div id="cards">
+      <div class="card">
+        <div class="card-label">Total de pares</div>
+        <div class="card-value" id="val-total">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Pares Bloco 01</div>
+        <div class="card-value" id="val-bloco01">—</div>
+        <div class="card-sub" id="pct-bloco01"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Municípios cobertos</div>
+        <div class="card-value" id="val-munic">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">SREs cobertas</div>
+        <div class="card-value" id="val-sre">—</div>
+        <div class="card-sub" id="sre-bh-note" style="display:none">
+          + BH <span style="color:var(--emphasis);font-weight:700;">exceção</span>
+        </div>
+      </div>
+    </div>
+    <div id="map-toolbar">
+      <span class="col-title">Mapa</span>
+      <div id="map-mode-toggle">
+        <button class="mode-btn active" data-mode="municipios">Municípios</button>
+        <button class="mode-btn" data-mode="sres">SREs</button>
+      </div>
+    </div>
+    <div id="map-wrap"><div id="map"></div></div>
+  </div>
+
+  <!-- ===== COL 3: PARES POR MUNICÍPIO ===== -->
+  <div id="col-munic">
+    <div class="col-header">
+      <span class="col-title">Pares por município</span>
+      <span id="munic-count" class="col-sub"></span>
+    </div>
+    <div id="munic-body"></div>
+  </div>
+
+  <!-- ===== COL 4: CURSOS PRIORITÁRIOS ===== -->
+  <div id="col-list">
+    <div id="list-header">
+      <span class="col-title">Cursos prioritários</span>
+      <span id="list-count"></span>
+    </div>
+    <div id="list-munic-note">
+      <span id="list-munic-nome"></span>
+      <button id="btn-clear-munic" title="Limpar seleção">×</button>
+    </div>
+    <div id="list-search-wrap">
+      <input id="list-search" type="text" placeholder="Filtrar lista…" autocomplete="off">
+    </div>
+    <div id="course-list"></div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let allData      = [];
+let geoMunic     = null;
+let geoSREs      = null;
+let filteredData = [];
+let mapMode      = 'municipios';
+let mapLayer     = null;
+let mapFitted    = false;
+let listQuery    = '';
+
+let pop100Ids   = new Set();
+let pop100Names = new Map(); // id_municipio → nome (IBGE)
+let municPopMap = new Map(); // id_municipio → populacao
+let municSREMap = new Map(); // id_municipio → sre (from allData)
+let municLayerMap = new Map(); // id_municipio → Leaflet layer
+
+let selectedMunic = null;
+
+/* ============================================================
+   LEAFLET
+   ============================================================ */
+const map = L.map('map', { zoomControl: true });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+}).addTo(map);
+
+/* ============================================================
+   FILTER STATE
+   ============================================================ */
+let filters = {
+  blocos:       new Set(['Bloco 01', 'Bloco 02', 'Bloco 03']),
+  sres:         new Set(), mesos: new Set(),
+  municipio:    '', eixos: new Set(), curso: '',
+  prioritarios: false, pop100: false
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function normalizeSRE(s) {
+  return (s || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+function interpolateMunic(t) {
+  return `rgb(${Math.round(0x94+t*(0x17-0x94))},${Math.round(0xB2+t*(0x4A-0xB2))},${Math.round(0xD7+t*(0x7E-0xD7))})`;
+}
+function isBH(sre) {
+  const n = normalizeSRE(sre);
+  return n === 'belo horizonte' || n === 'municipio de belo horizonte';
+}
+const BLOCO_COLOR = { 'Bloco 01': '#174A7E', 'Bloco 02': '#2E8B57', 'Bloco 03': '#F0C040', 'Bloco 04': '#E07B39' };
+const BLOCO_ORDER = { 'Bloco 01': 1, 'Bloco 02': 2, 'Bloco 03': 3, 'Bloco 04': 4 };
+
+function formatPop(n) {
+  if (!n) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.', ',') + ' M hab.';
+  if (n >= 1000)    return (n / 1000).toFixed(1).replace('.', ',') + ' mil hab.';
+  return n.toLocaleString('pt-BR') + ' hab.';
+}
+
+function dominantBloco(b01, b02, b03) {
+  if (b01 + b02 + b03 === 0) return null;
+  if (b01 > 10) return 'Bloco 01';
+  const m = Math.max(b01, b02, b03);
+  return m === b01 ? 'Bloco 01' : m === b02 ? 'Bloco 02' : 'Bloco 03';
+}
+
+/* ============================================================
+   APPLY FILTERS
+   ============================================================ */
+function applyFilters() {
+  filteredData = allData.filter(d => {
+    if (!filters.blocos.has(d.bloco))                                      return false;
+    if (filters.sres.size  > 0 && !filters.sres.has(d.sre))               return false;
+    if (filters.mesos.size > 0 && !filters.mesos.has(d.dc_mesorregiao))   return false;
+    if (filters.municipio  && d.municipio      !== filters.municipio)      return false;
+    if (filters.eixos.size > 0 && !filters.eixos.has(d.eixo_tecnologico)) return false;
+    if (filters.curso      && d.curso_tecnico  !== filters.curso)          return false;
+    if (filters.prioritarios && !d.fl_municipio_prioritario)               return false;
+    if (filters.pop100 && !pop100Ids.has(d.id_municipio))                  return false;
+    return true;
+  });
+  updateCards();
+  updateMap();
+  updateMunicTable();
+  updateList();
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+function updateCards() {
+  const total = filteredData.length;
+  const b01   = filteredData.filter(d => d.bloco === 'Bloco 01').length;
+  const munic = new Set(filteredData.map(d => d.id_municipio)).size;
+  const sreSet  = new Set(filteredData.map(d => d.sre));
+  const hasBH   = [...sreSet].some(isBH);
+  const sreCount = hasBH ? sreSet.size - 1 : sreSet.size;
+
+  document.getElementById('val-total').textContent   = total.toLocaleString('pt-BR');
+  document.getElementById('val-bloco01').textContent = b01.toLocaleString('pt-BR');
+  document.getElementById('pct-bloco01').textContent = total > 0 ? ((b01/total)*100).toFixed(1)+'% do total' : '';
+  document.getElementById('val-munic').textContent   = munic.toLocaleString('pt-BR');
+  document.getElementById('val-sre').textContent     = sreCount.toLocaleString('pt-BR');
+  document.getElementById('sre-bh-note').style.display = hasBH ? '' : 'none';
+}
+
+/* ============================================================
+   MAPA
+   ============================================================ */
+function updateMap() {
+  if (mapLayer) { map.removeLayer(mapLayer); mapLayer = null; }
+  municLayerMap.clear();
+  if (mapMode === 'municipios') renderMunic();
+  else renderSRE();
+}
+
+function municStyle(id, total, maxTotal) {
+  const isTop100Zero = filters.pop100 && pop100Ids.has(id) && total === 0;
+  const isSelected   = selectedMunic === id;
+  return {
+    fillColor:   isTop100Zero ? '#7B1F3A'
+               : total > 0   ? interpolateMunic(total / maxTotal)
+               :               '#BFBEBE',
+    fillOpacity: isTop100Zero ? 0.65 : 0.85,
+    color:       isSelected   ? '#F0C040' : '#ffffff',
+    weight:      isSelected   ? 2.5       : 0.5
+  };
+}
+
+function renderMunic() {
+  if (!geoMunic) return;
+
+  const lookup = new Map();
+  allData.forEach(d => {
+    if (!lookup.has(d.id_municipio))
+      lookup.set(d.id_municipio, { total:0, b01:0, b02:0, b03:0, sre:d.sre, nome:d.municipio });
+  });
+  filteredData.forEach(d => {
+    const s = lookup.get(d.id_municipio); if (!s) return;
+    s.total++;
+    if (d.bloco === 'Bloco 01') s.b01++;
+    else if (d.bloco === 'Bloco 02') s.b02++;
+    else s.b03++;
+  });
+  const maxTotal = Math.max(...[...lookup.values()].map(s => s.total), 1);
+
+  mapLayer = L.geoJSON(geoMunic, {
+    style: f => {
+      const id    = f.properties.id_municipio;
+      const s     = lookup.get(id);
+      const total = s ? s.total : 0;
+      return municStyle(id, total, maxTotal);
+    },
+    onEachFeature: (f, layer) => {
+      const id   = f.properties.id_municipio;
+      const s    = lookup.get(id);
+      const nome = f.properties.NM_MUN || (s ? s.nome : '');
+      const sre  = s ? s.sre   : '—';
+      const tot  = s ? s.total : 0;
+      const b01  = s ? s.b01   : 0;
+      const b02  = s ? s.b02   : 0;
+      const b03  = s ? s.b03   : 0;
+      municLayerMap.set(id, layer);
+      layer.bindTooltip(
+        `<strong>${nome}</strong> — ${sre}<br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}`,
+        { sticky: true }
+      );
+      layer.on('mouseover', function() { this.setStyle({ weight: 1.5, color: '#555' }); });
+      layer.on('mouseout',  function() { mapLayer.resetStyle(this); });
+      layer.on('click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        setSelectedMunic(selectedMunic === id ? null : id, false);
+      });
+    }
+  }).addTo(map);
+
+  if (!mapFitted && mapLayer.getBounds().isValid()) {
+    map.fitBounds(mapLayer.getBounds(), { padding: [4,4] });
+    mapFitted = true;
+  }
+}
+
+function renderSRE() {
+  if (!geoSREs) return;
+  const lookup = new Map();
+  filteredData.forEach(d => {
+    const key = normalizeSRE(d.sre);
+    if (!lookup.has(key)) lookup.set(key, { total:0, b01:0, b02:0, b03:0 });
+    const s = lookup.get(key);
+    s.total++;
+    if (d.bloco === 'Bloco 01') s.b01++;
+    else if (d.bloco === 'Bloco 02') s.b02++;
+    else s.b03++;
+  });
+  const maxTotal = Math.max(...[...lookup.values()].map(s => s.total), 1);
+
+  mapLayer = L.geoJSON(geoSREs, {
+    style: f => {
+      const s   = lookup.get(f.properties.Nome_SRE_norm);
+      const dom = s ? dominantBloco(s.b01, s.b02, s.b03) : null;
+      const alpha = s && s.total > 0 ? 0.2 + 0.75 * (s.total / maxTotal) : 0.4;
+      return { fillColor: dom ? BLOCO_COLOR[dom] : '#BFBEBE', fillOpacity: dom ? alpha : 0.4, color:'#fff', weight:0.8 };
+    },
+    onEachFeature: (f, layer) => {
+      const key  = f.properties.Nome_SRE_norm;
+      const nome = f.properties.Nome_SRE;
+      const s    = lookup.get(key);
+      const tot  = s ? s.total : 0;
+      const b01  = s ? s.b01 : 0;
+      const b02  = s ? s.b02 : 0;
+      const b03  = s ? s.b03 : 0;
+      const dom  = s ? dominantBloco(b01, b02, b03) : null;
+      layer.bindTooltip(
+        `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}<br>Bloco dominante: ${dom||'—'}`,
+        { sticky: true }
+      );
+      layer.on('mouseover', function() { this.setStyle({ weight:2, color:'#333' }); });
+      layer.on('mouseout',  function() { mapLayer.resetStyle(this); });
+    }
+  }).addTo(map);
+
+  if (!mapFitted && mapLayer.getBounds().isValid()) {
+    map.fitBounds(mapLayer.getBounds(), { padding:[4,4] });
+    mapFitted = true;
+  }
+}
+
+/* ============================================================
+   SELEÇÃO DE MUNICÍPIO
+   ============================================================ */
+function setSelectedMunic(id, zoomTo = true) {
+  selectedMunic = id;
+
+  // Re-estilizar mapa (style fn lê selectedMunic)
+  if (mapLayer && mapMode === 'municipios') {
+    mapLayer.eachLayer(l => mapLayer.resetStyle(l));
+  }
+
+  // Highlight na tabela e scroll para a linha
+  document.querySelectorAll('.munic-row').forEach(row => {
+    const match = parseInt(row.dataset.id) === id;
+    row.classList.toggle('selected', match);
+    if (match) row.scrollIntoView({ block: 'nearest' });
+  });
+
+  // Nota de filtro no cabeçalho da col 4
+  const note  = document.getElementById('list-munic-note');
+  const label = document.getElementById('list-munic-nome');
+  if (id !== null) {
+    const nome = pop100Names.get(id) ||
+      (allData.find(d => d.id_municipio === id) || {}).municipio || '—';
+    label.textContent = nome;
+    note.classList.add('visible');
+  } else {
+    note.classList.remove('visible');
+  }
+
+  updateList();
+}
+
+/* ============================================================
+   TABELA DE MUNICÍPIOS (col 3)
+   ============================================================ */
+function updateMunicTable() {
+  const bodyEl  = document.getElementById('munic-body');
+  const countEl = document.getElementById('munic-count');
+
+  // Contagem de pares por município nos dados filtrados
+  const pairsMap = new Map();
+  filteredData.forEach(d => pairsMap.set(d.id_municipio, (pairsMap.get(d.id_municipio) || 0) + 1));
+
+  let rows;
+
+  if (filters.pop100) {
+    // Todos os 100: 0 pares primeiro, depois ordenado por população desc
+    rows = [...pop100Ids].map(id => ({
+      id_municipio: id,
+      nome:  pop100Names.get(id) || '—',
+      sre:   municSREMap.get(id) || '—',
+      pop:   municPopMap.get(id) || 0,
+      total: pairsMap.get(id)   || 0
+    })).sort((a, b) => {
+      const aZero = a.total === 0, bZero = b.total === 0;
+      if (aZero !== bZero) return aZero ? -1 : 1;   // 0 pares primeiro
+      return (b.pop || 0) - (a.pop || 0);            // depois por pop desc
+    });
+  } else {
+    // Municípios presentes nos dados filtrados, ordenados por pares desc
+    const seen = new Map();
+    filteredData.forEach(d => {
+      if (!seen.has(d.id_municipio))
+        seen.set(d.id_municipio, {
+          id_municipio: d.id_municipio,
+          nome: d.municipio, sre: d.sre,
+          pop:  municPopMap.get(d.id_municipio) || 0,
+          total: 0
+        });
+      seen.get(d.id_municipio).total++;
+    });
+    rows = [...seen.values()].sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  countEl.textContent = rows.length + ' municípios';
+
+  if (rows.length === 0) {
+    bodyEl.innerHTML = '<div class="list-empty">Nenhum município</div>';
+    return;
+  }
+
+  bodyEl.innerHTML = rows.map(r => {
+    const isZero = r.total === 0;
+    const isSel  = selectedMunic === r.id_municipio;
+    const popTxt = formatPop(r.pop);
+    return `<div class="munic-row${isZero ? ' zero' : ''}${isSel ? ' selected' : ''}" data-id="${r.id_municipio}">
+      <div class="munic-info">
+        <div class="munic-nome">${r.nome}</div>
+        <div class="munic-sre">${r.sre}</div>
+        <div class="munic-pop">${popTxt}</div>
+      </div>
+      <div class="munic-right">
+        <div class="munic-count">${r.total}</div>
+        <div class="munic-count-label">pares</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  bodyEl.querySelectorAll('.munic-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const id = parseInt(row.dataset.id);
+      setSelectedMunic(selectedMunic === id ? null : id, true);
+    });
+  });
+}
+
+/* ============================================================
+   LISTA DE CURSOS (col 4)
+   ============================================================ */
+function updateList() {
+  let base = [...filteredData];
+  if (selectedMunic !== null) {
+    base = base.filter(d => d.id_municipio === selectedMunic);
+  }
+  const sorted = base.sort((a, b) => {
+    const bo = (BLOCO_ORDER[a.bloco]||9) - (BLOCO_ORDER[b.bloco]||9);
+    return bo !== 0 ? bo : (a.ranking||9999) - (b.ranking||9999);
+  });
+  renderList(sorted, listQuery);
+}
+
+function renderList(data, q) {
+  const listEl = document.getElementById('course-list');
+  const cntEl  = document.getElementById('list-count');
+  let rows = data;
+  if (q) {
+    const ql = q.toLowerCase();
+    rows = data.filter(d =>
+      (d.curso_tecnico||'').toLowerCase().includes(ql) ||
+      (d.municipio||'').toLowerCase().includes(ql) ||
+      (d.sre||'').toLowerCase().includes(ql) ||
+      (d.eixo_tecnologico||'').toLowerCase().includes(ql)
+    );
+  }
+  cntEl.textContent = rows.length.toLocaleString('pt-BR') + ' itens';
+  if (rows.length === 0) { listEl.innerHTML = '<div class="list-empty">Nenhum resultado</div>'; return; }
+  listEl.innerHTML = rows.map(d => {
+    const bg = BLOCO_COLOR[d.bloco]||'#BFBEBE';
+    const fc = d.bloco === 'Bloco 03' ? '#1C1C1C' : '#fff'; // só amarelo precisa de texto escuro
+    const prior = d.fl_municipio_prioritario ? `<span class="list-prior">prioritário</span>` : '';
+    return `<div class="list-item">
+      <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
+      <div class="list-body">
+        <div class="list-titulo">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
+        <div class="list-loc">${d.dc_mesorregiao||'—'} · SRE ${d.sre||'—'}</div>
+        <div class="list-meta">
+          <span style="background:${bg};color:${fc};padding:1px 7px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;">${d.bloco||''}</span>
+          ${d.fl_municipio_prioritario ? `<span class="list-prior">setores prioritários</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   MULTI-SELECT
+   ============================================================ */
+class MultiSelect {
+  constructor(id, onChange, defLabel) {
+    this.el=document.getElementById(id); this.onChange=onChange; this.defLabel=defLabel||'Todos';
+    this.selected=new Set(); this.options=[];
+    this.btnSpan=this.el.querySelector('.ms-button span');
+    this.dropdown=this.el.querySelector('.ms-dropdown');
+    this.search=this.el.querySelector('.ms-search');
+    this.optDiv=this.el.querySelector('.ms-options');
+    this.el.querySelector('.ms-button').addEventListener('click',e=>{e.stopPropagation();this.dropdown.classList.toggle('open');});
+    this.search.addEventListener('input',()=>this._render());
+    document.addEventListener('click',e=>{if(!this.el.contains(e.target))this.dropdown.classList.remove('open');});
+  }
+  setOptions(raw){this.options=[...new Set(raw)].filter(Boolean).sort();this.selected=new Set();this._render();this._updateBtn();}
+  _render(){
+    const q=this.search.value.toLowerCase();
+    const list=q?this.options.filter(o=>o.toLowerCase().includes(q)):this.options;
+    this.optDiv.innerHTML=list.map(o=>{const e=o.replace(/&/g,'&amp;').replace(/"/g,'&quot;');const c=this.selected.has(o)?' checked':'';return`<label class="ms-option"><input type="checkbox" value="${e}"${c}><span>${o}</span></label>`;}).join('');
+    this.optDiv.querySelectorAll('input').forEach(cb=>{cb.addEventListener('change',()=>{cb.checked?this.selected.add(cb.value):this.selected.delete(cb.value);this._updateBtn();this.onChange(this.selected);});});
+  }
+  _updateBtn(){const n=this.selected.size;this.btnSpan.textContent=n===0?this.defLabel:n===1?[...this.selected][0]:`${n} selecionados`;}
+  reset(){this.selected=new Set();this.search.value='';this._render();this._updateBtn();}
+}
+
+/* ============================================================
+   SEARCH-SELECT
+   ============================================================ */
+class SearchSelect {
+  constructor(id, onChange) {
+    this.el=document.getElementById(id); this.onChange=onChange; this.value=''; this.options=[];
+    this.input=this.el.querySelector('.ss-input');
+    this.dropdown=this.el.querySelector('.ss-dropdown');
+    this.optDiv=this.el.querySelector('.ss-options');
+    this.input.addEventListener('input',()=>{this.value='';this._render(this.input.value);this.dropdown.classList.add('open');});
+    this.input.addEventListener('focus',()=>{this._render(this.input.value);this.dropdown.classList.add('open');});
+    document.addEventListener('click',e=>{if(!this.el.contains(e.target))this.dropdown.classList.remove('open');});
+  }
+  setOptions(raw){this.options=[...new Set(raw)].filter(Boolean).sort();this.value='';this.input.value='';}
+  _render(q){
+    const list=q?this.options.filter(o=>o.toLowerCase().includes(q.toLowerCase())):this.options;
+    this.optDiv.innerHTML=`<div class="ss-option" data-value="">— Todos —</div>`+list.slice(0,200).map(o=>{const e=o.replace(/&/g,'&amp;').replace(/"/g,'&quot;');return`<div class="ss-option" data-value="${e}">${o}</div>`;}).join('');
+    this.optDiv.querySelectorAll('.ss-option').forEach(el=>{el.addEventListener('mousedown',e=>{e.preventDefault();this.value=el.dataset.value;this.input.value=this.value;this.dropdown.classList.remove('open');this.onChange(this.value);});});
+  }
+  reset(){this.value='';this.input.value='';}
+}
+
+/* ============================================================
+   INSTANCIAR COMPONENTES
+   ============================================================ */
+const msSRE   = new MultiSelect('ms-sre',  s=>{filters.sres  =s;applyFilters();},'Todas');
+const msMeso  = new MultiSelect('ms-meso', s=>{filters.mesos =s;applyFilters();},'Todas');
+const msEixo  = new MultiSelect('ms-eixo', s=>{filters.eixos =s;applyFilters();},'Todos');
+const ssMunic = new SearchSelect('ss-municipio',v=>{filters.municipio=v;applyFilters();});
+const ssCurso = new SearchSelect('ss-curso',    v=>{filters.curso    =v;applyFilters();});
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+document.querySelectorAll('input[name=bloco]').forEach(cb=>{
+  cb.addEventListener('change',()=>{
+    filters.blocos=new Set([...document.querySelectorAll('input[name=bloco]:checked')].map(c=>c.value));
+    applyFilters();
+  });
+});
+document.getElementById('toggle-prioritarios').addEventListener('change',function(){filters.prioritarios=this.checked;applyFilters();});
+document.getElementById('toggle-pop100').addEventListener('change',function(){filters.pop100=this.checked;applyFilters();});
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode=btn.dataset.mode;
+    updateMap();
+  });
+});
+
+document.getElementById('btn-clear').addEventListener('click',()=>{
+  filters={blocos:new Set(['Bloco 01','Bloco 02','Bloco 03']),sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
+  document.querySelectorAll('input[name=bloco]').forEach(cb=>cb.checked=true);
+  document.getElementById('toggle-prioritarios').checked=false;
+  document.getElementById('toggle-pop100').checked=false;
+  msSRE.reset();msMeso.reset();msEixo.reset();ssMunic.reset();ssCurso.reset();
+  setSelectedMunic(null, false);
+  applyFilters();
+});
+
+document.getElementById('btn-clear-munic').addEventListener('click',()=>setSelectedMunic(null,false));
+
+document.getElementById('list-search').addEventListener('input',function(){
+  listQuery=this.value;
+  const base=selectedMunic!==null?filteredData.filter(d=>d.id_municipio===selectedMunic):filteredData;
+  const sorted=[...base].sort((a,b)=>{const bo=(BLOCO_ORDER[a.bloco]||9)-(BLOCO_ORDER[b.bloco]||9);return bo!==0?bo:(a.ranking||9999)-(b.ranking||9999);});
+  renderList(sorted,listQuery);
+});
+
+/* ============================================================
+   CARREGAR DADOS
+   ============================================================ */
+Promise.all([
+  fetch('dados/trilhas.json').then(r=>r.json()),
+  fetch('dados/municipios.json').then(r=>r.json()),
+  fetch('dados/sres.json').then(r=>r.json()),
+  fetch('dados/pop100.json').then(r=>r.json())
+]).then(([trilhas, munic, sres, pop100]) => {
+  allData  = trilhas;
+  geoMunic = munic;
+  geoSREs  = sres;
+
+  // Índices auxiliares
+  pop100Ids   = new Set(pop100.map(d => d.id_municipio));
+  pop100.forEach(d => {
+    pop100Names.set(d.id_municipio, d.nome);
+    municPopMap.set(d.id_municipio, d.populacao);
+  });
+  allData.forEach(d => { if (!municSREMap.has(d.id_municipio)) municSREMap.set(d.id_municipio, d.sre); });
+
+  msSRE.setOptions(allData.map(d=>d.sre));
+  msMeso.setOptions(allData.map(d=>d.dc_mesorregiao));
+  msEixo.setOptions(allData.map(d=>d.eixo_tecnologico));
+  ssMunic.setOptions(allData.map(d=>d.municipio));
+  ssCurso.setOptions(allData.map(d=>d.curso_tecnico));
+
+  filteredData=[...allData];
+  updateCards();
+  renderMunic();
+  updateMunicTable();
+  updateList();
+
+  document.getElementById('loading').style.display='none';
+}).catch(err=>{
+  document.getElementById('loading').textContent='Erro ao carregar dados: '+err.message;
+  console.error(err);
+});
+</script>
+</body>
+</html>

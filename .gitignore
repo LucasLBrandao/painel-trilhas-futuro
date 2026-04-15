@@ -1,0 +1,20 @@
+# Dados brutos pesados
+intermediarios/
+entradas/
+
+# GeoJSONs originais de alta resolução (substituídos pelos simplificados)
+painel/dados/municipios.geojson
+painel/dados/sres.geojson
+painel/dados/municipios_simples.geojson
+painel/dados/sres_simples.geojson
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
