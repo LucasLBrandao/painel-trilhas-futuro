@@ -170,6 +170,31 @@ body {
 }
 .col-sub { font-size:11px; color:var(--text-cap); }
 
+#munic-search-wrap { flex-shrink:0; padding:6px 12px; border-bottom:1px solid var(--border); }
+#munic-search { width:100%; padding:5px 8px; border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
+#munic-search:focus { border-color:var(--structure); }
+
+#sre-selected-note {
+  flex-shrink: 0; display: none;
+  align-items: center; justify-content: space-between;
+  padding: 5px 12px;
+  background: var(--surface-note); border-bottom: 1px solid var(--border);
+  font-size: 11px; color: var(--structure); font-weight: 700;
+}
+#sre-selected-note.visible { display: flex; }
+#btn-clear-sre { background:none; border:none; cursor:pointer; font-size:14px; color:var(--text-cap); line-height:1; padding:0 2px; }
+#btn-clear-sre:hover { color:var(--emphasis); }
+
+/* Labels permanentes no mapa SREs */
+.sre-label {
+  background: transparent !important; border: none !important; box-shadow: none !important;
+  font-family: 'IBM Plex Sans', sans-serif !important;
+  font-size: 9px !important; font-weight: 700 !important; color: #1C1C1C !important;
+  padding: 0 !important; white-space: nowrap !important; pointer-events: none !important;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+}
+.sre-label::before { display: none !important; }
+
 #munic-body { flex:1; overflow-y:auto; min-height:0; }
 
 .munic-row {
@@ -636,6 +661,13 @@ body {
       <span class="col-title">Pares por município</span>
       <span id="munic-count" class="col-sub"></span>
     </div>
+    <div id="sre-selected-note">
+      <span id="sre-selected-nome"></span>
+      <button id="btn-clear-sre" title="Limpar seleção SRE">×</button>
+    </div>
+    <div id="munic-search-wrap">
+      <input id="munic-search" type="text" placeholder="Filtrar município…" autocomplete="off">
+    </div>
     <div id="munic-body"></div>
   </div>
 
@@ -697,6 +729,9 @@ let municSREMap = new Map(); // id_municipio → sre (from allData)
 let municLayerMap = new Map(); // id_municipio → Leaflet layer
 
 let selectedMunic = null;
+let selectedSRE   = null; // Nome_SRE_norm da SRE selecionada no mapa
+let municQuery    = '';
+let sreLayerMap   = new Map(); // nome_sre_norm → Leaflet layer
 
 /* ============================================================
    LEAFLET
@@ -794,6 +829,7 @@ function updateCards() {
 function updateMap() {
   if (mapLayer) { map.removeLayer(mapLayer); mapLayer = null; }
   municLayerMap.clear();
+  sreLayerMap.clear();
   if (mapMode === 'municipios') renderMunic();
   else renderSRE();
 }
@@ -880,10 +916,16 @@ function renderSRE() {
 
   mapLayer = L.geoJSON(geoSREs, {
     style: f => {
-      const s   = lookup.get(f.properties.Nome_SRE_norm);
-      const dom = s ? dominantBloco(s.b01, s.b02, s.b03) : null;
+      const s    = lookup.get(f.properties.Nome_SRE_norm);
+      const dom  = s ? dominantBloco(s.b01, s.b02, s.b03) : null;
       const alpha = s && s.total > 0 ? 0.2 + 0.75 * (s.total / maxTotal) : 0.4;
-      return { fillColor: dom ? BLOCO_COLOR[dom] : '#BFBEBE', fillOpacity: dom ? alpha : 0.4, color:'#fff', weight:0.8 };
+      const isSel = selectedSRE === f.properties.Nome_SRE_norm;
+      return {
+        fillColor: dom ? BLOCO_COLOR[dom] : '#BFBEBE',
+        fillOpacity: dom ? alpha : 0.4,
+        color:  isSel ? '#F0C040' : '#fff',
+        weight: isSel ? 2.5 : 0.8
+      };
     },
     onEachFeature: (f, layer) => {
       const key  = f.properties.Nome_SRE_norm;
@@ -894,12 +936,33 @@ function renderSRE() {
       const b02  = s ? s.b02 : 0;
       const b03  = s ? s.b03 : 0;
       const dom  = s ? dominantBloco(b01, b02, b03) : null;
-      layer.bindTooltip(
-        `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}<br>Bloco dominante: ${dom||'—'}`,
-        { sticky: true }
-      );
-      layer.on('mouseover', function() { this.setStyle({ weight:2, color:'#333' }); });
-      layer.on('mouseout',  function() { mapLayer.resetStyle(this); });
+
+      sreLayerMap.set(key, layer);
+
+      // Label permanente com o nome da regional
+      layer.bindTooltip(nome, {
+        permanent: true, direction: 'center',
+        className: 'sre-label', interactive: false
+      });
+
+      // Tooltip hover com detalhes (sobrepõe o permanente ao passar o mouse)
+      layer.on('mouseover', function() {
+        this.unbindTooltip();
+        this.bindTooltip(
+          `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}<br>Bloco dominante: ${dom||'—'}`,
+          { sticky: true }
+        ).openTooltip();
+        this.setStyle({ weight: 2, color: '#333' });
+      });
+      layer.on('mouseout', function() {
+        this.unbindTooltip();
+        this.bindTooltip(nome, { permanent: true, direction: 'center', className: 'sre-label', interactive: false });
+        mapLayer.resetStyle(this);
+      });
+      layer.on('click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        setSelectedSRE(selectedSRE === key ? null : key, nome);
+      });
     }
   }).addTo(map);
 
@@ -939,6 +1002,31 @@ function setSelectedMunic(id, zoomTo = true) {
     note.classList.remove('visible');
   }
 
+  updateList();
+}
+
+/* ============================================================
+   SELEÇÃO DE SRE (clique no mapa SRE)
+   ============================================================ */
+function setSelectedSRE(sreNorm, nomeDisplay) {
+  selectedSRE = sreNorm;
+
+  // Re-estilizar mapa (style fn lê selectedSRE)
+  if (mapLayer && mapMode === 'sres') {
+    mapLayer.eachLayer(l => mapLayer.resetStyle(l));
+  }
+
+  // Nota na col 3
+  const note  = document.getElementById('sre-selected-note');
+  const label = document.getElementById('sre-selected-nome');
+  if (sreNorm) {
+    label.textContent = nomeDisplay || sreNorm;
+    note.classList.add('visible');
+  } else {
+    note.classList.remove('visible');
+  }
+
+  updateMunicTable();
   updateList();
 }
 
@@ -984,6 +1072,17 @@ function updateMunicTable() {
     rows = [...seen.values()].sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
+  // Filtro por SRE selecionada no mapa
+  if (selectedSRE) {
+    rows = rows.filter(r => normalizeSRE(r.sre) === selectedSRE);
+  }
+
+  // Filtro por busca textual
+  if (municQuery) {
+    const q = municQuery.toLowerCase();
+    rows = rows.filter(r => r.nome.toLowerCase().includes(q) || r.sre.toLowerCase().includes(q));
+  }
+
   countEl.textContent = rows.length + ' municípios';
 
   if (rows.length === 0) {
@@ -1023,6 +1122,8 @@ function updateList() {
   let base = [...filteredData];
   if (selectedMunic !== null) {
     base = base.filter(d => d.id_municipio === selectedMunic);
+  } else if (selectedSRE !== null) {
+    base = base.filter(d => normalizeSRE(d.sre) === selectedSRE);
   }
   const sorted = base.sort((a, b) => {
     const bo = (BLOCO_ORDER[a.bloco]||9) - (BLOCO_ORDER[b.bloco]||9);
@@ -1138,6 +1239,10 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
     document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     mapMode=btn.dataset.mode;
+    // Limpar seleções ao trocar modo do mapa
+    selectedMunic=null;
+    document.getElementById('list-munic-note').classList.remove('visible');
+    setSelectedSRE(null);
     updateMap();
   });
 });
@@ -1149,10 +1254,18 @@ document.getElementById('btn-clear').addEventListener('click',()=>{
   document.getElementById('toggle-pop100').checked=false;
   msSRE.reset();msMeso.reset();msEixo.reset();ssMunic.reset();ssCurso.reset();
   setSelectedMunic(null, false);
+  setSelectedSRE(null);
+  municQuery=''; document.getElementById('munic-search').value='';
   applyFilters();
 });
 
 document.getElementById('btn-clear-munic').addEventListener('click',()=>setSelectedMunic(null,false));
+document.getElementById('btn-clear-sre').addEventListener('click',()=>setSelectedSRE(null));
+
+document.getElementById('munic-search').addEventListener('input',function(){
+  municQuery=this.value;
+  updateMunicTable();
+});
 
 document.getElementById('list-search').addEventListener('input',function(){
   listQuery=this.value;
