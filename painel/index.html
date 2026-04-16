@@ -1194,8 +1194,8 @@ function renderList(data, q) {
     return `<div class="list-item">
       <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
       <div class="list-body">
-        <div class="list-titulo">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
-        <div class="list-loc">${d.dc_mesorregiao||'—'} · ${d.sre||'—'}</div>
+        <div class="list-titulo" title="${d.municipio||'—'} — ${d.curso_tecnico||'—'}">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
+        <div class="list-loc" title="${d.dc_mesorregiao||'—'} · ${d.sre||'—'}">${d.dc_mesorregiao||'—'} · ${d.sre||'—'}</div>
         <div class="list-meta">
           <span style="background:${bg};color:${fc};padding:1px 7px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;">${d.bloco||''}</span>
           ${d.fl_municipio_prioritario ? `<span class="list-prior">setores prioritários</span>` : ''}
