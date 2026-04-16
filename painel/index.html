@@ -583,7 +583,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 07:35</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 07:50</div>
     </div>
     <div class="filters">
 
@@ -808,7 +808,7 @@ new ResizeObserver(entries => {
    FILTER STATE
    ============================================================ */
 let filters = {
-  activeBloco:  null,
+  blocos:       new Set(),
   sres:         new Set(), mesos: new Set(),
   municipio:    '', eixos: new Set(), curso: '',
   prioritarios: false, pop100: false
@@ -859,7 +859,7 @@ function applyFilters() {
 
 function _runFilters() {
   filteredData = allData.filter(d => {
-    if (filters.activeBloco && d.bloco !== filters.activeBloco)             return false;
+    if (filters.blocos.size > 0 && !filters.blocos.has(d.bloco))            return false;
     if (filters.sres.size  > 0 && !filters.sres.has(d.sre))               return false;
     if (filters.mesos.size > 0 && !filters.mesos.has(d.dc_mesorregiao))   return false;
     if (filters.municipio  && d.municipio      !== filters.municipio)      return false;
@@ -1422,9 +1422,10 @@ const ssCurso = new SearchSelect('ss-curso',    v=>{filters.curso    =v;applyFil
 document.querySelectorAll('.bloco-chip').forEach(btn => {
   btn.addEventListener('click', () => {
     const bloco = btn.dataset.bloco;
-    filters.activeBloco = filters.activeBloco === bloco ? null : bloco;
+    if (filters.blocos.has(bloco)) filters.blocos.delete(bloco);
+    else filters.blocos.add(bloco);
     document.querySelectorAll('.bloco-chip').forEach(b =>
-      b.classList.toggle('active', b.dataset.bloco === filters.activeBloco)
+      b.classList.toggle('active', filters.blocos.has(b.dataset.bloco))
     );
     applyFilters();
   });
@@ -1446,7 +1447,7 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
 });
 
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  filters={activeBloco:null,sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
+  filters={blocos:new Set(),sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
   document.querySelectorAll('.bloco-chip').forEach(b=>b.classList.remove('active'));
   document.getElementById('toggle-prioritarios').checked=false;
   document.getElementById('toggle-pop100').checked=false;
@@ -1556,7 +1557,7 @@ function loadData() {
    ============================================================ */
 function updateFilterBadge() {
   const count =
-    (filters.activeBloco              ? 1 : 0) +
+    (filters.blocos.size        > 0 ? 1 : 0) +
     (filters.sres.size        > 0 ? 1 : 0) +
     (filters.mesos.size       > 0 ? 1 : 0) +
     (filters.municipio            ? 1 : 0) +
