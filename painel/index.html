@@ -196,7 +196,7 @@ body {
 .sre-label {
   background: transparent !important; border: none !important; box-shadow: none !important;
   font-family: 'IBM Plex Sans', sans-serif !important;
-  font-size: 9px !important; font-weight: 700 !important; color: #1C1C1C !important;
+  font-size: 8px !important; font-weight: 400 !important; color: #1C1C1C !important;
   padding: 0 !important; white-space: nowrap !important; pointer-events: none !important;
   text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
 }
@@ -564,7 +564,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 07:05</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 07:13</div>
     </div>
     <div class="filters">
 
@@ -957,6 +957,30 @@ function initSRELayer() {
       });
     }
   });
+
+}
+
+let _sreFontSized = false;
+function _applySREFontSizes() {
+  if (_sreFontSized || !sreGeoLayer) return;
+  const areas = [];
+  sreGeoLayer.eachLayer(layer => {
+    const b = layer.getBounds();
+    areas.push((b.getNorth() - b.getSouth()) * (b.getEast() - b.getWest()));
+  });
+  const minA = Math.min(...areas), maxA = Math.max(...areas);
+  const minPx = 7, maxPx = 11;
+  let applied = 0;
+  sreGeoLayer.eachLayer(layer => {
+    const b    = layer.getBounds();
+    const area = (b.getNorth() - b.getSouth()) * (b.getEast() - b.getWest());
+    const t    = maxA > minA ? (area - minA) / (maxA - minA) : 0.5;
+    const size = Math.round(minPx + t * (maxPx - minPx));
+    const el   = layer.getTooltip()?.getElement();
+    if (el) { el.style.setProperty('font-size', size + 'px', 'important'); applied++; }
+  });
+  if (applied > 0) _sreFontSized = true;
+  else setTimeout(_applySREFontSizes, 50); // retry se tooltips ainda não estavam no DOM
 }
 
 /* -------- atualiza + troca camada visível -------- */
@@ -1070,7 +1094,10 @@ function renderSRE() {
   sreGeoLayer.options.style = styleFunc;
   sreGeoLayer.setStyle(styleFunc);
 
-  if (!map.hasLayer(sreGeoLayer)) map.addLayer(sreGeoLayer);
+  if (!map.hasLayer(sreGeoLayer)) {
+    map.addLayer(sreGeoLayer);
+    setTimeout(_applySREFontSizes, 0);
+  }
 
   if (!mapFitted && sreGeoLayer.getBounds().isValid()) {
     map.fitBounds(sreGeoLayer.getBounds(), { padding:[1,1] });
