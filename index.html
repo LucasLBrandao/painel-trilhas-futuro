@@ -583,7 +583,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 09:41</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 09:44</div>
     </div>
     <div class="filters">
 
@@ -821,9 +821,6 @@ function normalizeSRE(s) {
   return (s || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/^sre\s+/, ''); // remove prefixo "sre " para compatibilidade com Nome_SRE_norm do GeoJSON
 }
-function interpolateMunic(t) {
-  return `rgb(${Math.round(0x94+t*(0x17-0x94))},${Math.round(0xB2+t*(0x4A-0xB2))},${Math.round(0xD7+t*(0x7E-0xD7))})`;
-}
 function isBH(sre) {
   const n = normalizeSRE(sre);
   return n === 'belo horizonte' || n === 'municipio de belo horizonte';
@@ -904,10 +901,9 @@ function initMunicLayer() {
   municGeoLayer = L.geoJSON(geoMunic, {
     renderer: canvasRenderer,
     style: f => {
-      const id    = f.properties.id_municipio;
-      const s     = _municLookup.get(id);
-      const total = s ? s.total : 0;
-      return municStyle(id, total, _municMaxTotal);
+      const id = f.properties.id_municipio;
+      const s  = _municLookup.get(id);
+      return municStyle(id, s, _municMaxTotal);
     },
     onEachFeature: (f, layer) => {
       const id   = f.properties.id_municipio;
@@ -1013,14 +1009,17 @@ function updateMap() {
   }
 }
 
-function municStyle(id, total, maxTotal) {
+function municStyle(id, s, maxTotal) {
+  const total        = s ? s.total : 0;
   const isTop100Zero = filters.pop100 && pop100Ids.has(id) && total === 0;
   const isSelected   = selectedMunic === id;
+  const dom          = s && total > 0 ? dominantBloco(s.b01, s.b02, s.b03, s.b04) : null;
+  const alpha        = total > 0 ? 0.2 + 0.75 * (total / maxTotal) : 0.35;
   return {
     fillColor:   isTop100Zero ? '#7B1F3A'
-               : total > 0   ? interpolateMunic(total / maxTotal)
-               :               '#BFBEBE',
-    fillOpacity: isTop100Zero ? 0.65 : 0.85,
+               : dom          ? BLOCO_COLOR[dom]
+               :                '#BFBEBE',
+    fillOpacity: isTop100Zero ? 0.65 : alpha,
     color:       isSelected   ? '#F0C040' : '#ffffff',
     weight:      isSelected   ? 2.5       : 0.5
   };
@@ -1047,10 +1046,9 @@ function renderMunic() {
 
   // Update style (options.style must match so resetStyle works)
   const styleFunc = f => {
-    const id    = f.properties.id_municipio;
-    const s     = _municLookup.get(id);
-    const total = s ? s.total : 0;
-    return municStyle(id, total, _municMaxTotal);
+    const id = f.properties.id_municipio;
+    const s  = _municLookup.get(id);
+    return municStyle(id, s, _municMaxTotal);
   };
   municGeoLayer.options.style = styleFunc;
   municGeoLayer.setStyle(styleFunc);
