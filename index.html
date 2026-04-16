@@ -55,7 +55,7 @@ body {
   order: 2;
   width: 430px; flex-shrink: 0;
   display: flex; flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   border-right: 1px solid var(--border);
   background: var(--bg);
 }
@@ -65,7 +65,7 @@ body {
   order: 3;
   flex: 1;
   display: flex; flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   border-right: 1px solid var(--border);
   background: var(--bg);
 }
@@ -157,7 +157,7 @@ body {
 .mode-btn.active { background:var(--structure); color:#fff; border-color:var(--structure); }
 .mode-btn:hover:not(.active) { background:var(--surface-note); }
 
-#map-wrap { flex:1; min-height:0; }
+#map-wrap { width:100%; aspect-ratio:1/1; flex-shrink:0; }
 #map { width:100%; height:100%; }
 
 .leaflet-tooltip { font-family:'IBM Plex Sans',sans-serif; font-size:12px; line-height:1.5; border:1px solid var(--border); padding:6px 10px; }
@@ -746,6 +746,16 @@ const map = L.map('map', { zoomControl: true });
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
   attribution: '© OpenStreetMap © CARTO', maxZoom: 19
 }).addTo(map);
+
+/* Redimensiona o mapa quando o container mudar de tamanho (ex: resize da janela) */
+new ResizeObserver(() => {
+  map.invalidateSize();
+  setTimeout(() => {
+    if (mapLayer && mapLayer.getBounds().isValid()) {
+      map.fitBounds(mapLayer.getBounds(), { padding:[8,8] });
+    }
+  }, 50);
+}).observe(document.getElementById('map-wrap'));
 
 /* ============================================================
    FILTER STATE
