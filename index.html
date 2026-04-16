@@ -84,16 +84,22 @@ body {
    COLUNA 1 — FILTROS
    =================================================== */
 .sidebar-header {
-  padding: 16px 14px 12px;
-  border-bottom: 2px solid var(--structure);
+  padding: 12px 14px 0;
   flex-shrink: 0;
 }
+.sidebar-header::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: var(--border);
+  margin: 10px 10px 0;
+}
 .sidebar-logo { font-size: 10px; font-weight: 700; color: var(--text-cap); letter-spacing:.1em; text-transform:uppercase; margin-bottom:3px; }
-.sidebar-title { font-size: 14px; font-weight: 700; color: var(--structure); }
+.sidebar-title { font-size: 13px; font-weight: 700; color: var(--structure); }
 .sidebar-subtitle { font-size: 11px; color: var(--text-cap); margin-top: 2px; }
 .sidebar-version  { font-size: 9px; color: var(--text-cap); margin-top: 6px; letter-spacing: .02em; }
 
-.filters { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.filters { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 10px; }
 .filter-group { display: flex; flex-direction: column; gap: 4px; }
 .filter-label { font-size: 10px; font-weight: 700; color: var(--structure); text-transform: uppercase; letter-spacing: .08em; }
 
@@ -105,7 +111,7 @@ body {
 .bloco-chips { display: flex; flex-direction: column; gap: 4px; }
 .bloco-chip {
   display: block; width: 100%;
-  padding: 3px 8px; text-align: left;
+  padding: 2px 8px; text-align: left;
   font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
   cursor: pointer; border-width: 1.5px; border-style: solid;
   background: transparent; opacity: 0.45;
@@ -120,7 +126,7 @@ body {
 .bloco-chip.active[data-bloco="Bloco 03"] { background: var(--yellow); color: #1C1C1C; }
 .bloco-chip.active[data-bloco="Bloco 04"] { background: #E07B39; }
 
-.toggle-item { display:flex; align-items:flex-start; gap:7px; cursor:pointer; font-size:12px; color:var(--text-sec); line-height:1.4; }
+.toggle-item { display:flex; align-items:flex-start; gap:7px; cursor:pointer; font-size:11px; color:var(--text-sec); line-height:1.4; }
 .toggle-item input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; margin-top:1px; }
 
 .badge { display:inline-block; padding:1px 7px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; }
@@ -130,27 +136,27 @@ body {
 .badge-04 { background:#E07B39;       color:#fff; }
 
 .multi-select { position:relative; }
-.ms-button { width:100%; padding:5px 8px; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--text); cursor:pointer; text-align:left; display:flex; align-items:center; justify-content:space-between; gap:4px; }
+.ms-button { width:100%; padding:4px 8px; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text); cursor:pointer; text-align:left; display:flex; align-items:center; justify-content:space-between; gap:4px; }
 .ms-button span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ms-button::after { content:'▾'; font-size:10px; color:var(--text-cap); flex-shrink:0; }
 .ms-button:hover { border-color:var(--structure); }
 .ms-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:1000; background:var(--bg); border:1px solid var(--border); border-top:none; max-height:180px; overflow-y:auto; }
 .ms-dropdown.open { display:block; }
-.ms-search { width:100%; padding:5px 8px; border:none; border-bottom:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; outline:none; }
-.ms-option { display:flex; align-items:center; gap:7px; padding:4px 8px; cursor:pointer; font-size:12px; }
+.ms-search { width:100%; padding:4px 8px; border:none; border-bottom:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:11px; outline:none; }
+.ms-option { display:flex; align-items:center; gap:7px; padding:3px 8px; cursor:pointer; font-size:11px; }
 .ms-option:hover { background:var(--surface-note); }
 .ms-option input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; }
 
 .search-select { position:relative; }
-.ss-input { width:100%; padding:5px 8px; border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; color:var(--text); outline:none; background:var(--bg); }
+.ss-input { width:100%; padding:4px 8px; border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:11px; color:var(--text); outline:none; background:var(--bg); }
 .ss-input:focus { border-color:var(--structure); }
 .ss-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:1000; background:var(--bg); border:1px solid var(--border); border-top:none; max-height:180px; overflow-y:auto; }
 .ss-dropdown.open { display:block; }
-.ss-option { padding:4px 8px; cursor:pointer; font-size:12px; }
+.ss-option { padding:3px 8px; cursor:pointer; font-size:11px; }
 .ss-option:hover { background:var(--surface-note); }
 .ss-option[data-value=""] { color:var(--text-cap); border-bottom:1px solid var(--border); }
 
-#btn-clear { padding:7px 0; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:700; color:var(--emphasis); cursor:pointer; width:100%; text-align:center; }
+#btn-clear { padding:5px 0; background:var(--bg); border:1px solid var(--border); font-family:'IBM Plex Sans',sans-serif; font-size:11px; font-weight:700; color:var(--emphasis); cursor:pointer; width:100%; text-align:center; }
 #btn-clear:hover { background:var(--surface-note); border-color:var(--emphasis); }
 
 /* ===================================================
@@ -583,7 +589,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 09:44</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 09:51</div>
     </div>
     <div class="filters">
 
