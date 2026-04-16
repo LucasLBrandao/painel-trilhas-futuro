@@ -53,7 +53,7 @@ body {
 /* Col 2 — Lista (reordenada para 2ª posição) */
 #col-list {
   order: 2;
-  width: 430px; flex-shrink: 0;
+  flex: 1; min-width: 280px;
   display: flex; flex-direction: column;
   overflow: visible;
   border-right: 1px solid var(--border);
@@ -63,7 +63,9 @@ body {
 /* Col 3 — Mapa */
 #col-map {
   order: 3;
-  flex: 1;
+  flex-shrink: 0;
+  /* Largura = altura disponível para o mapa (quadrado), limitada para não comprimir a lista */
+  width: min(calc(100vh - 175px), calc(100vw - 850px));
   display: flex; flex-direction: column;
   overflow: visible;
   border-right: 1px solid var(--border);
