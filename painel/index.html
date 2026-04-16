@@ -656,8 +656,8 @@ body {
     <div id="map-toolbar">
       <span class="col-title">Mapa</span>
       <div id="map-mode-toggle">
-        <button class="mode-btn active" data-mode="municipios">Municípios</button>
-        <button class="mode-btn" data-mode="sres">SREs</button>
+        <button class="mode-btn" data-mode="municipios">Municípios</button>
+        <button class="mode-btn active" data-mode="sres">SREs</button>
       </div>
     </div>
     <div id="map-wrap"><div id="map"></div></div>
@@ -725,7 +725,7 @@ let allData      = [];
 let geoMunic     = null;
 let geoSREs      = null;
 let filteredData = [];
-let mapMode      = 'municipios';
+let mapMode      = 'sres';
 let mapLayer     = null;
 let mapFitted    = false;
 let listQuery    = '';
@@ -754,7 +754,7 @@ new ResizeObserver(() => {
   map.invalidateSize();
   setTimeout(() => {
     if (mapLayer && mapLayer.getBounds().isValid()) {
-      map.fitBounds(mapLayer.getBounds(), { padding:[8,8] });
+      map.fitBounds(mapLayer.getBounds(), { padding:[1,1] });
     }
   }, 50);
 }).observe(document.getElementById('map-wrap'));
@@ -913,7 +913,7 @@ function renderMunic() {
   }).addTo(map);
 
   if (!mapFitted && mapLayer.getBounds().isValid()) {
-    map.fitBounds(mapLayer.getBounds(), { padding: [4,4] });
+    map.fitBounds(mapLayer.getBounds(), { padding: [1,1] });
     mapFitted = true;
   }
 }
@@ -985,7 +985,7 @@ function renderSRE() {
   }).addTo(map);
 
   if (!mapFitted && mapLayer.getBounds().isValid()) {
-    map.fitBounds(mapLayer.getBounds(), { padding:[4,4] });
+    map.fitBounds(mapLayer.getBounds(), { padding:[1,1] });
     mapFitted = true;
   }
 }
@@ -1369,7 +1369,7 @@ function updateFilterBadge() {
     if (tab === 'map') setTimeout(() => {
       map.invalidateSize();
       if (mapLayer && mapLayer.getBounds().isValid()) {
-        map.fitBounds(mapLayer.getBounds(), { padding: [4, 4] });
+        map.fitBounds(mapLayer.getBounds(), { padding: [1,1] });
       }
     }, 80);
   }
