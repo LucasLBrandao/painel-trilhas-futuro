@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -50,7 +50,7 @@ body {
   overflow-y: auto; background: var(--bg);
 }
 
-/* Col 2 — Lista (reordenada para 2ª posição) */
+/* Col 2 — Lista */
 #col-list {
   order: 2;
   flex: 1; min-width: 280px;
@@ -64,7 +64,6 @@ body {
 #col-map {
   order: 3;
   flex-shrink: 0;
-  /* Largura = altura disponível para o mapa (quadrado), limitada para não comprimir a lista */
   width: min(calc(100vh - 175px), calc(100vw - 850px));
   display: flex; flex-direction: column;
   overflow: visible;
@@ -135,7 +134,7 @@ body {
 #btn-clear:hover { background:var(--surface-note); border-color:var(--emphasis); }
 
 /* ===================================================
-   COLUNA 2 — MAPA
+   COLUNA 3 — MAPA
    =================================================== */
 #cards {
   flex-shrink: 0;
@@ -165,7 +164,7 @@ body {
 .leaflet-tooltip { font-family:'IBM Plex Sans',sans-serif; font-size:12px; line-height:1.5; border:1px solid var(--border); padding:6px 10px; }
 
 /* ===================================================
-   COLUNA 3 — TABELA MUNICÍPIOS
+   COLUNA 4 — TABELA MUNICÍPIOS
    =================================================== */
 .col-header {
   flex-shrink: 0;
@@ -229,7 +228,7 @@ body {
 .munic-count-label { font-size:9px; color:var(--text-cap); text-transform:uppercase; letter-spacing:.04em; }
 
 /* ===================================================
-   COLUNA 4 — CURSOS PRIORITÁRIOS
+   COLUNA 2 — CURSOS PRIORITÁRIOS
    =================================================== */
 #list-header { flex-shrink:0; padding:8px 14px 6px; border-bottom:1px solid var(--border); }
 #list-header-top { display:flex; align-items:baseline; gap:8px; }
@@ -348,7 +347,7 @@ body {
 /* ===================================================
    MOBILE — ocultar elementos mobile no desktop
    =================================================== */
-#mobile-topbar, #mobile-nav, #drawer-overlay, #mobile-tab-bar { display: none; }
+#mobile-topbar, #drawer-overlay, #mobile-tab-bar { display: none; }
 
 /* ===================================================
    RESPONSIVO — ≤ 768px
@@ -435,7 +434,7 @@ body {
   #col-map {
     display: flex;
     flex: none;
-    order: -1;    /* garante que cards+tabs ficam sempre no topo no mobile */
+    order: -1;
     width: 100%;
     border-right: none;
   }
@@ -498,11 +497,10 @@ body {
     top: calc(100% + 6px);
     left: 0;
     transform: none;
-    width: 220px;
   }
 }
 
-/* Ícone de dúvida com tooltip */
+/* Ícone de informação com tooltip via CSS */
 .info-tip {
   display: inline-flex; align-items: center; justify-content: center;
   width: 13px; height: 13px; border-radius: 50%;
@@ -637,7 +635,7 @@ body {
     </div>
   </aside>
 
-  <!-- ===== COL 2: MAPA ===== -->
+  <!-- ===== COL 3: MAPA ===== -->
   <div id="col-map">
     <div id="cards">
       <div class="card">
@@ -685,7 +683,7 @@ body {
     <div id="map-wrap"><div id="map"></div></div>
   </div>
 
-  <!-- ===== COL 3: PARES POR MUNICÍPIO ===== -->
+  <!-- ===== COL 4: PARES POR MUNICÍPIO ===== -->
   <div id="col-munic">
     <div class="col-header">
       <span class="col-title">Pares por município</span>
@@ -701,7 +699,7 @@ body {
     <div id="munic-body"></div>
   </div>
 
-  <!-- ===== COL 4: CURSOS PRIORITÁRIOS ===== -->
+  <!-- ===== COL 2: CURSOS PRIORITÁRIOS ===== -->
   <div id="col-list">
     <div id="list-header">
       <div id="list-header-top">
@@ -722,22 +720,6 @@ body {
 
 </div>
 
-<!-- Bottom nav mobile -->
-<nav id="mobile-nav">
-  <button class="mob-tab active" data-tab="list">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    <span>Lista</span>
-  </button>
-  <button class="mob-tab" data-tab="map">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-    <span>Mapa</span>
-  </button>
-  <button class="mob-tab" data-tab="munic">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
-    <span>Municípios</span>
-  </button>
-</nav>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ============================================================
@@ -757,11 +739,11 @@ let pop100Names = new Map(); // id_municipio → nome (IBGE)
 let municPopMap = new Map(); // id_municipio → populacao
 let municSREMap = new Map(); // id_municipio → sre (from allData)
 let municLayerMap = new Map(); // id_municipio → Leaflet layer
+let sreLayerMap   = new Map(); // nome_sre_norm → Leaflet layer
 
 let selectedMunic = null;
 let selectedSRE   = null; // Nome_SRE_norm da SRE selecionada no mapa
 let municQuery    = '';
-let sreLayerMap   = new Map(); // nome_sre_norm → Leaflet layer
 
 /* ============================================================
    LEAFLET
@@ -771,7 +753,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png
   attribution: '© OpenStreetMap © CARTO', maxZoom: 19
 }).addTo(map);
 
-/* Redimensiona o mapa quando o container mudar de tamanho (ex: resize da janela) */
+/* Redimensiona o mapa quando o container mudar de tamanho */
 new ResizeObserver(() => {
   map.invalidateSize();
   setTimeout(() => {
@@ -785,7 +767,7 @@ new ResizeObserver(() => {
    FILTER STATE
    ============================================================ */
 let filters = {
-  blocos:       new Set(['Bloco 01', 'Bloco 02', 'Bloco 03']),
+  blocos:       new Set(['Bloco 01', 'Bloco 02', 'Bloco 03', 'Bloco 04']),
   sres:         new Set(), mesos: new Set(),
   municipio:    '', eixos: new Set(), curso: '',
   prioritarios: false, pop100: false
@@ -815,11 +797,15 @@ function formatPop(n) {
   return n.toLocaleString('pt-BR') + ' hab.';
 }
 
-function dominantBloco(b01, b02, b03) {
-  if (b01 + b02 + b03 === 0) return null;
+function dominantBloco(b01, b02, b03, b04) {
+  const total = b01 + b02 + b03 + b04;
+  if (total === 0) return null;
   if (b01 > 10) return 'Bloco 01';
-  const m = Math.max(b01, b02, b03);
-  return m === b01 ? 'Bloco 01' : m === b02 ? 'Bloco 02' : 'Bloco 03';
+  const m = Math.max(b01, b02, b03, b04);
+  if (m === b01) return 'Bloco 01';
+  if (m === b02) return 'Bloco 02';
+  if (m === b03) return 'Bloco 03';
+  return 'Bloco 04';
 }
 
 /* ============================================================
@@ -841,7 +827,7 @@ function applyFilters() {
   updateMap();
   updateMunicTable();
   updateList();
-  if (typeof updateFilterBadge === 'function') updateFilterBadge();
+  updateFilterBadge();
 }
 
 /* ============================================================
@@ -893,14 +879,15 @@ function renderMunic() {
   const lookup = new Map();
   allData.forEach(d => {
     if (!lookup.has(d.id_municipio))
-      lookup.set(d.id_municipio, { total:0, b01:0, b02:0, b03:0, sre:d.sre, nome:d.municipio });
+      lookup.set(d.id_municipio, { total:0, b01:0, b02:0, b03:0, b04:0, sre:d.sre, nome:d.municipio });
   });
   filteredData.forEach(d => {
     const s = lookup.get(d.id_municipio); if (!s) return;
     s.total++;
-    if (d.bloco === 'Bloco 01') s.b01++;
+    if      (d.bloco === 'Bloco 01') s.b01++;
     else if (d.bloco === 'Bloco 02') s.b02++;
-    else s.b03++;
+    else if (d.bloco === 'Bloco 03') s.b03++;
+    else                             s.b04++;
   });
   const maxTotal = Math.max(...[...lookup.values()].map(s => s.total), 1);
 
@@ -920,16 +907,17 @@ function renderMunic() {
       const b01  = s ? s.b01   : 0;
       const b02  = s ? s.b02   : 0;
       const b03  = s ? s.b03   : 0;
+      const b04  = s ? s.b04   : 0;
       municLayerMap.set(id, layer);
       layer.bindTooltip(
-        `<strong>${nome}</strong> — ${sre}<br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}`,
+        `<strong>${nome}</strong> — ${sre}<br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03} | Bloco 04: ${b04}`,
         { sticky: true }
       );
       layer.on('mouseover', function() { this.setStyle({ weight: 1.5, color: '#555' }); });
       layer.on('mouseout',  function() { mapLayer.resetStyle(this); });
       layer.on('click', function(e) {
         L.DomEvent.stopPropagation(e);
-        setSelectedMunic(selectedMunic === id ? null : id, false);
+        setSelectedMunic(selectedMunic === id ? null : id);
       });
     }
   }).addTo(map);
@@ -945,19 +933,20 @@ function renderSRE() {
   const lookup = new Map();
   filteredData.forEach(d => {
     const key = normalizeSRE(d.sre);
-    if (!lookup.has(key)) lookup.set(key, { total:0, b01:0, b02:0, b03:0 });
+    if (!lookup.has(key)) lookup.set(key, { total:0, b01:0, b02:0, b03:0, b04:0 });
     const s = lookup.get(key);
     s.total++;
-    if (d.bloco === 'Bloco 01') s.b01++;
+    if      (d.bloco === 'Bloco 01') s.b01++;
     else if (d.bloco === 'Bloco 02') s.b02++;
-    else s.b03++;
+    else if (d.bloco === 'Bloco 03') s.b03++;
+    else                             s.b04++;
   });
   const maxTotal = Math.max(...[...lookup.values()].map(s => s.total), 1);
 
   mapLayer = L.geoJSON(geoSREs, {
     style: f => {
       const s    = lookup.get(f.properties.Nome_SRE_norm);
-      const dom  = s ? dominantBloco(s.b01, s.b02, s.b03) : null;
+      const dom  = s ? dominantBloco(s.b01, s.b02, s.b03, s.b04) : null;
       const alpha = s && s.total > 0 ? 0.2 + 0.75 * (s.total / maxTotal) : 0.4;
       const isSel = selectedSRE === f.properties.Nome_SRE_norm;
       return {
@@ -975,7 +964,8 @@ function renderSRE() {
       const b01  = s ? s.b01 : 0;
       const b02  = s ? s.b02 : 0;
       const b03  = s ? s.b03 : 0;
-      const dom  = s ? dominantBloco(b01, b02, b03) : null;
+      const b04  = s ? s.b04 : 0;
+      const dom  = s ? dominantBloco(b01, b02, b03, b04) : null;
 
       sreLayerMap.set(key, layer);
 
@@ -989,7 +979,7 @@ function renderSRE() {
       layer.on('mouseover', function() {
         this.unbindTooltip();
         this.bindTooltip(
-          `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03}<br>Bloco dominante: ${dom||'—'}`,
+          `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03} | Bloco 04: ${b04}<br>Bloco dominante: ${dom||'—'}`,
           { sticky: true }
         ).openTooltip();
         this.setStyle({ weight: 2, color: '#333' });
@@ -1015,7 +1005,7 @@ function renderSRE() {
 /* ============================================================
    SELEÇÃO DE MUNICÍPIO
    ============================================================ */
-function setSelectedMunic(id, zoomTo = true) {
+function setSelectedMunic(id) {
   selectedMunic = id;
 
   // Re-estilizar mapa (style fn lê selectedMunic)
@@ -1030,7 +1020,7 @@ function setSelectedMunic(id, zoomTo = true) {
     if (match) row.scrollIntoView({ block: 'nearest' });
   });
 
-  // Nota de filtro no cabeçalho da col 4
+  // Nota de filtro no cabeçalho da col 2
   const note  = document.getElementById('list-munic-note');
   const label = document.getElementById('list-munic-nome');
   if (id !== null) {
@@ -1056,7 +1046,7 @@ function setSelectedSRE(sreNorm, nomeDisplay) {
     mapLayer.eachLayer(l => mapLayer.resetStyle(l));
   }
 
-  // Nota na col 3
+  // Nota na col 4
   const note  = document.getElementById('sre-selected-note');
   const label = document.getElementById('sre-selected-nome');
   if (sreNorm) {
@@ -1071,7 +1061,7 @@ function setSelectedSRE(sreNorm, nomeDisplay) {
 }
 
 /* ============================================================
-   TABELA DE MUNICÍPIOS (col 3)
+   TABELA DE MUNICÍPIOS (col 4)
    ============================================================ */
 function updateMunicTable() {
   const bodyEl  = document.getElementById('munic-body');
@@ -1146,17 +1136,18 @@ function updateMunicTable() {
       </div>
     </div>`;
   }).join('');
-
-  bodyEl.querySelectorAll('.munic-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const id = parseInt(row.dataset.id);
-      setSelectedMunic(selectedMunic === id ? null : id, true);
-    });
-  });
 }
 
+// Event delegation for munic-body — single listener, no per-row attachment
+document.getElementById('munic-body').addEventListener('click', function(e) {
+  const row = e.target.closest('.munic-row');
+  if (!row) return;
+  const id = parseInt(row.dataset.id);
+  setSelectedMunic(selectedMunic === id ? null : id);
+});
+
 /* ============================================================
-   LISTA DE CURSOS (col 4)
+   LISTA DE CURSOS (col 2)
    ============================================================ */
 function updateList() {
   let base = [...filteredData];
@@ -1190,7 +1181,6 @@ function renderList(data, q) {
   listEl.innerHTML = rows.map(d => {
     const bg = BLOCO_COLOR[d.bloco]||'#BFBEBE';
     const fc = d.bloco === 'Bloco 03' ? '#1C1C1C' : '#fff'; // só amarelo precisa de texto escuro
-    const prior = d.fl_municipio_prioritario ? `<span class="list-prior">prioritário</span>` : '';
     return `<div class="list-item">
       <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
       <div class="list-body">
@@ -1218,6 +1208,14 @@ class MultiSelect {
     this.optDiv=this.el.querySelector('.ms-options');
     this.el.querySelector('.ms-button').addEventListener('click',e=>{e.stopPropagation();this.dropdown.classList.toggle('open');});
     this.search.addEventListener('input',()=>this._render());
+    // Event delegation: one listener on optDiv instead of per-checkbox
+    this.optDiv.addEventListener('change',e=>{
+      const cb=e.target;
+      if(cb.type!=='checkbox') return;
+      cb.checked?this.selected.add(cb.value):this.selected.delete(cb.value);
+      this._updateBtn();
+      this.onChange(this.selected);
+    });
     document.addEventListener('click',e=>{if(!this.el.contains(e.target))this.dropdown.classList.remove('open');});
   }
   setOptions(raw){this.options=[...new Set(raw)].filter(Boolean).sort();this.selected=new Set();this._render();this._updateBtn();}
@@ -1225,7 +1223,6 @@ class MultiSelect {
     const q=this.search.value.toLowerCase();
     const list=q?this.options.filter(o=>o.toLowerCase().includes(q)):this.options;
     this.optDiv.innerHTML=list.map(o=>{const e=o.replace(/&/g,'&amp;').replace(/"/g,'&quot;');const c=this.selected.has(o)?' checked':'';return`<label class="ms-option"><input type="checkbox" value="${e}"${c}><span>${o}</span></label>`;}).join('');
-    this.optDiv.querySelectorAll('input').forEach(cb=>{cb.addEventListener('change',()=>{cb.checked?this.selected.add(cb.value):this.selected.delete(cb.value);this._updateBtn();this.onChange(this.selected);});});
   }
   _updateBtn(){const n=this.selected.size;this.btnSpan.textContent=n===0?this.defLabel:n===1?[...this.selected][0]:`${n} selecionados`;}
   reset(){this.selected=new Set();this.search.value='';this._render();this._updateBtn();}
@@ -1242,13 +1239,22 @@ class SearchSelect {
     this.optDiv=this.el.querySelector('.ss-options');
     this.input.addEventListener('input',()=>{this.value='';this._render(this.input.value);this.dropdown.classList.add('open');});
     this.input.addEventListener('focus',()=>{this._render(this.input.value);this.dropdown.classList.add('open');});
+    // Event delegation: one listener on optDiv instead of per-option
+    this.optDiv.addEventListener('mousedown',e=>{
+      const opt=e.target.closest('.ss-option');
+      if(!opt) return;
+      e.preventDefault();
+      this.value=opt.dataset.value;
+      this.input.value=this.value;
+      this.dropdown.classList.remove('open');
+      this.onChange(this.value);
+    });
     document.addEventListener('click',e=>{if(!this.el.contains(e.target))this.dropdown.classList.remove('open');});
   }
   setOptions(raw){this.options=[...new Set(raw)].filter(Boolean).sort();this.value='';this.input.value='';}
   _render(q){
     const list=q?this.options.filter(o=>o.toLowerCase().includes(q.toLowerCase())):this.options;
     this.optDiv.innerHTML=`<div class="ss-option" data-value="">— Todos —</div>`+list.slice(0,200).map(o=>{const e=o.replace(/&/g,'&amp;').replace(/"/g,'&quot;');return`<div class="ss-option" data-value="${e}">${o}</div>`;}).join('');
-    this.optDiv.querySelectorAll('.ss-option').forEach(el=>{el.addEventListener('mousedown',e=>{e.preventDefault();this.value=el.dataset.value;this.input.value=this.value;this.dropdown.classList.remove('open');this.onChange(this.value);});});
   }
   reset(){this.value='';this.input.value='';}
 }
@@ -1288,18 +1294,18 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
 });
 
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  filters={blocos:new Set(['Bloco 01','Bloco 02','Bloco 03']),sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
+  filters={blocos:new Set(['Bloco 01','Bloco 02','Bloco 03','Bloco 04']),sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
   document.querySelectorAll('input[name=bloco]').forEach(cb=>cb.checked=true);
   document.getElementById('toggle-prioritarios').checked=false;
   document.getElementById('toggle-pop100').checked=false;
   msSRE.reset();msMeso.reset();msEixo.reset();ssMunic.reset();ssCurso.reset();
-  setSelectedMunic(null, false);
+  setSelectedMunic(null);
   setSelectedSRE(null);
   municQuery=''; document.getElementById('munic-search').value='';
   applyFilters();
 });
 
-document.getElementById('btn-clear-munic').addEventListener('click',()=>setSelectedMunic(null,false));
+document.getElementById('btn-clear-munic').addEventListener('click',()=>setSelectedMunic(null));
 document.getElementById('btn-clear-sre').addEventListener('click',()=>setSelectedSRE(null));
 
 document.getElementById('munic-search').addEventListener('input',function(){
@@ -1309,51 +1315,49 @@ document.getElementById('munic-search').addEventListener('input',function(){
 
 document.getElementById('list-search').addEventListener('input',function(){
   listQuery=this.value;
-  const base=selectedMunic!==null?filteredData.filter(d=>d.id_municipio===selectedMunic):filteredData;
-  const sorted=[...base].sort((a,b)=>{const bo=(BLOCO_ORDER[a.bloco]||9)-(BLOCO_ORDER[b.bloco]||9);return bo!==0?bo:(a.ranking||9999)-(b.ranking||9999);});
-  renderList(sorted,listQuery);
+  updateList();
 });
 
 /* ============================================================
    CARREGAR DADOS
    ============================================================ */
 function loadData() {
-Promise.all([
-  fetch('dados/trilhas.json').then(r=>r.json()),
-  fetch('dados/municipios.json').then(r=>r.json()),
-  fetch('dados/sres.json').then(r=>r.json()),
-  fetch('dados/pop100.json').then(r=>r.json())
-]).then(([trilhas, munic, sres, pop100]) => {
-  allData  = trilhas;
-  geoMunic = munic;
-  geoSREs  = sres;
+  Promise.all([
+    fetch('dados/trilhas.json').then(r=>r.json()),
+    fetch('dados/municipios.json').then(r=>r.json()),
+    fetch('dados/sres.json').then(r=>r.json()),
+    fetch('dados/pop100.json').then(r=>r.json())
+  ]).then(([trilhas, munic, sres, pop100]) => {
+    allData  = trilhas;
+    geoMunic = munic;
+    geoSREs  = sres;
 
-  // Índices auxiliares
-  pop100Ids   = new Set(pop100.map(d => d.id_municipio));
-  pop100.forEach(d => {
-    pop100Names.set(d.id_municipio, d.nome);
-    municPopMap.set(d.id_municipio, d.populacao);
+    // Índices auxiliares
+    pop100Ids   = new Set(pop100.map(d => d.id_municipio));
+    pop100.forEach(d => {
+      pop100Names.set(d.id_municipio, d.nome);
+      municPopMap.set(d.id_municipio, d.populacao);
+    });
+    allData.forEach(d => { if (!municSREMap.has(d.id_municipio)) municSREMap.set(d.id_municipio, d.sre); });
+
+    msSRE.setOptions(allData.map(d=>d.sre));
+    msMeso.setOptions(allData.map(d=>d.dc_mesorregiao));
+    msEixo.setOptions(allData.map(d=>d.eixo_tecnologico));
+    ssMunic.setOptions(allData.map(d=>d.municipio));
+    ssCurso.setOptions(allData.map(d=>d.curso_tecnico));
+
+    filteredData=[...allData];
+    updateCards();
+    updateMap();
+    updateMunicTable();
+    updateList();
+
+    document.getElementById('loading').style.display='none';
+  }).catch(err=>{
+    document.getElementById('loading').textContent='Erro ao carregar dados: '+err.message;
+    console.error(err);
   });
-  allData.forEach(d => { if (!municSREMap.has(d.id_municipio)) municSREMap.set(d.id_municipio, d.sre); });
-
-  msSRE.setOptions(allData.map(d=>d.sre));
-  msMeso.setOptions(allData.map(d=>d.dc_mesorregiao));
-  msEixo.setOptions(allData.map(d=>d.eixo_tecnologico));
-  ssMunic.setOptions(allData.map(d=>d.municipio));
-  ssCurso.setOptions(allData.map(d=>d.curso_tecnico));
-
-  filteredData=[...allData];
-  updateCards();
-  updateMap();
-  updateMunicTable();
-  updateList();
-
-  document.getElementById('loading').style.display='none';
-}).catch(err=>{
-  document.getElementById('loading').textContent='Erro ao carregar dados: '+err.message;
-  console.error(err);
-});
-} // fim loadData()
+}
 
 /* ============================================================
    MOBILE — BADGE DE FILTROS ATIVOS
@@ -1384,7 +1388,7 @@ function updateFilterBadge() {
     // Aplica classe no body — CSS cuida de mostrar/esconder os painéis
     TABS.forEach(t => document.body.classList.remove('mob-tab-' + t));
     document.body.classList.add('mob-tab-' + tab);
-    // Atualiza estado ativo dos botões (inline tab bar + bottom nav se houver)
+    // Atualiza estado ativo dos botões (inline tab bar)
     document.querySelectorAll('.mob-tab').forEach(b =>
       b.classList.toggle('active', b.dataset.tab === tab)
     );
