@@ -181,7 +181,7 @@ body {
 #map-wrap { width:100%; aspect-ratio:1/1; flex-shrink:0; }
 #map { width:100%; height:100%; }
 
-.leaflet-tooltip { font-family:'IBM Plex Sans',sans-serif; font-size:12px; line-height:1.5; border:1px solid var(--border); padding:6px 10px; }
+.leaflet-tooltip { font-family:'IBM Plex Sans',sans-serif; font-size:11px; line-height:1.5; border:1px solid var(--border); padding:5px 9px; max-width: 180px; white-space: normal; word-break: break-word; }
 
 /* ===================================================
    COLUNA 4 — TABELA MUNICÍPIOS
@@ -583,7 +583,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 07:18</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 07:24</div>
     </div>
     <div class="filters">
 
@@ -960,7 +960,7 @@ function initSRELayer() {
         const dom = s ? dominantBloco(b01, b02, b03, b04) : null;
         this.unbindTooltip();
         this.bindTooltip(
-          `<strong>${nome}</strong><br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03} | Bloco 04: ${b04}<br>Bloco dominante: ${dom||'—'}`,
+          `<strong>${nome}</strong><br>Total: <strong>${tot}</strong> pares<br>B01: ${b01} · B02: ${b02}<br>B03: ${b03} · B04: ${b04}<br>Dominante: ${dom||'—'}`,
           { sticky: true }
         ).openTooltip();
         this.setStyle({ weight: 2, color: '#333' });
@@ -1067,7 +1067,7 @@ function renderMunic() {
     const b03  = s ? s.b03   : 0;
     const b04  = s ? s.b04   : 0;
     layer.setTooltipContent(
-      `<strong>${nome}</strong> — ${sre}<br>Total de pares: <strong>${tot}</strong><br>Bloco 01: ${b01} | Bloco 02: ${b02} | Bloco 03: ${b03} | Bloco 04: ${b04}`
+      `<strong>${nome}</strong><br>${sre}<br>Total: <strong>${tot}</strong> pares<br>B01: ${b01} · B02: ${b02} · B03: ${b03} · B04: ${b04}`
     );
   });
 
