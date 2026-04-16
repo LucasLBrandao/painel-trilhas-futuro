@@ -501,6 +501,30 @@ body {
     width: 220px;
   }
 }
+
+/* Ícone de dúvida com tooltip */
+.info-tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid var(--text-cap); color: var(--text-cap);
+  font-size: 8px; font-weight: 700; font-family: serif;
+  cursor: help; position: relative; vertical-align: middle; margin-left: 3px;
+  flex-shrink: 0;
+}
+.info-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%; transform: translateX(-50%);
+  background: #1C1C1C; color: #fff;
+  font-size: 11px; font-weight: 400; font-style: normal;
+  font-family: 'IBM Plex Sans', sans-serif;
+  line-height: 1.5; padding: 8px 10px;
+  width: 260px; white-space: normal;
+  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  z-index: 9999;
+}
+.info-tip:hover::after { opacity: 1; }
 </style>
 </head>
 <body>
@@ -632,9 +656,7 @@ body {
       <div class="card">
         <div class="card-label">SREs cobertas</div>
         <div class="card-value" id="val-sre">—</div>
-        <div class="card-sub" id="sre-bh-note" style="display:none">
-          + BH <span style="color:var(--emphasis);font-weight:700;">exceção</span>
-        </div>
+        <div class="card-sub" id="sre-bh-note" style="display:none">+ Município de BH<span class="info-tip" data-tip="O Município de Belo Horizonte foi tratado como uma regional independente. Na divisão oficial, seu território é atendido por 3 Superintendências Regionais de Ensino (SREs) distintas, sendo contabilizado separadamente nesta análise.">?</span></div>
       </div>
     </div>
     <!-- Tab bar mobile — aparece abaixo dos cards -->
