@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+# Workaround Windows file lock: bash mantém deploy.sh aberto enquanto executa,
+# impedindo que git checkout main o restaure no passo final. Rodar a partir de
+# uma cópia em /tmp libera o arquivo original.
+if [[ "$0" != /tmp/* ]]; then
+  export DEPLOY_ROOT="$(cd "$(dirname "$0")" && pwd)"
+  cp "$0" /tmp/deploy_run.sh
+  exec bash /tmp/deploy_run.sh "$@"
+fi
+
 RSCRIPT="/c/Program Files/R/R-4.5.1/bin/Rscript.exe"
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="${DEPLOY_ROOT:-$(cd "$(dirname "$0")" && pwd)}"
 RDS="$ROOT/intermediarios/priorizacao_trilhas_7_para_analise_com_bloco_04.rds"
 JSON_DEST="$ROOT/painel/dados/trilhas.json"
 
