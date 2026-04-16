@@ -47,7 +47,7 @@ body {
   width: 220px; min-width: 220px; max-width: 220px; flex-shrink: 0;
   display: flex; flex-direction: column;
   border-right: 1px solid var(--border);
-  overflow: visible; background: var(--bg);
+  overflow-y: auto; overflow-x: hidden; background: var(--bg);
 }
 
 /* Col 2 — Lista */
@@ -93,7 +93,7 @@ body {
 .sidebar-subtitle { font-size: 11px; color: var(--text-cap); margin-top: 2px; }
 .sidebar-version  { font-size: 9px; color: var(--text-cap); margin-top: 6px; letter-spacing: .02em; }
 
-.filters { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; min-height: 0; }
+.filters { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 .filter-group { display: flex; flex-direction: column; gap: 4px; }
 .filter-label { font-size: 10px; font-weight: 700; color: var(--structure); text-transform: uppercase; letter-spacing: .08em; }
 
@@ -269,7 +269,7 @@ body {
 .list-prior  { font-size:10px; color:var(--positive); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
 .list-empty  { padding:24px 14px; font-size:12px; color:var(--text-cap); text-align:center; }
 
-/* Ícone de dúvida com tooltip */
+/* Ícone de dúvida com tooltip global (position: fixed via JS) */
 .help-icon {
   display: inline-flex;
   align-items: center;
@@ -282,16 +282,13 @@ body {
   color: var(--text-cap);
   cursor: default;
   flex-shrink: 0;
-  position: relative;
   line-height: 1;
   font-style: normal;
 }
-.help-icon .help-tooltip {
+.help-icon .help-tooltip { display: none; } /* texto mantido no HTML, lido pelo JS */
+#help-tooltip-global {
   display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
   background: var(--structure);
   color: #fff;
   font-size: 11px;
@@ -299,11 +296,10 @@ body {
   line-height: 1.4;
   padding: 7px 10px;
   width: 220px;
-  z-index: 2000;
+  z-index: 9000;
   pointer-events: none;
   white-space: normal;
 }
-.help-icon:hover .help-tooltip { display: block; }
 
 /* ===================================================
    LOADING
@@ -558,6 +554,7 @@ body {
 <div id="drawer-overlay"></div>
 
 <div id="loading">Carregando dados…</div>
+<div id="help-tooltip-global"></div>
 
 <div id="app">
 
@@ -567,7 +564,7 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 06:35</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 07:00</div>
     </div>
     <div class="filters">
 
@@ -1426,6 +1423,36 @@ document.getElementById('list-search').addEventListener('input',function(){
 document.getElementById('course-list').addEventListener('scroll', function() {
   _paintListWindow(this);
 });
+
+/* ============================================================
+   TOOLTIP GLOBAL (position: fixed — escapa de qualquer overflow)
+   ============================================================ */
+(function() {
+  const tip = document.getElementById('help-tooltip-global');
+  function showTip(icon) {
+    const text = (icon.querySelector('.help-tooltip') || {}).textContent || '';
+    if (!text.trim()) return;
+    tip.textContent = text;
+    tip.style.display = 'block';
+    moveTip(icon);
+  }
+  function moveTip(icon) {
+    const r   = icon.getBoundingClientRect();
+    const tw  = tip.offsetWidth;
+    const th  = tip.offsetHeight;
+    let left  = r.left + r.width / 2 - tw / 2;
+    let top   = r.top - th - 8;
+    // Manter dentro da viewport
+    left = Math.max(8, Math.min(left, window.innerWidth  - tw - 8));
+    top  = Math.max(8, Math.min(top,  window.innerHeight - th - 8));
+    tip.style.left = left + 'px';
+    tip.style.top  = top  + 'px';
+  }
+  document.querySelectorAll('.help-icon').forEach(icon => {
+    icon.addEventListener('mouseenter', () => showTip(icon));
+    icon.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}());
 
 /* ============================================================
    CARREGAR DADOS
