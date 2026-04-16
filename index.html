@@ -101,6 +101,25 @@ body {
 .checkbox-item { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12px; }
 .checkbox-item input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; }
 
+/* Chips de seleção de Bloco */
+.bloco-chips { display: flex; flex-direction: column; gap: 4px; }
+.bloco-chip {
+  display: block; width: 100%;
+  padding: 3px 8px; text-align: left;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+  cursor: pointer; border-width: 1.5px; border-style: solid;
+  background: transparent; opacity: 0.45;
+}
+.bloco-chip[data-bloco="Bloco 01"] { border-color: var(--blue1);  color: var(--blue1);  }
+.bloco-chip[data-bloco="Bloco 02"] { border-color: var(--green);  color: var(--green);  }
+.bloco-chip[data-bloco="Bloco 03"] { border-color: var(--yellow); color: #7a6100;       }
+.bloco-chip[data-bloco="Bloco 04"] { border-color: #E07B39;       color: #E07B39;       }
+.bloco-chip.active                 { opacity: 1; color: #fff; }
+.bloco-chip.active[data-bloco="Bloco 01"] { background: var(--blue1);  }
+.bloco-chip.active[data-bloco="Bloco 02"] { background: var(--green);  }
+.bloco-chip.active[data-bloco="Bloco 03"] { background: var(--yellow); color: #1C1C1C; }
+.bloco-chip.active[data-bloco="Bloco 04"] { background: #E07B39; }
+
 .toggle-item { display:flex; align-items:flex-start; gap:7px; cursor:pointer; font-size:12px; color:var(--text-sec); line-height:1.4; }
 .toggle-item input[type=checkbox] { width:13px; height:13px; cursor:pointer; accent-color:var(--structure); flex-shrink:0; margin-top:1px; }
 
@@ -564,17 +583,17 @@ body {
       <div class="sidebar-logo">SEE / MG</div>
       <div class="sidebar-title">Trilhas de Futuro — 7ª edição</div>
       <div class="sidebar-subtitle">Priorização Curso × Município</div>
-      <div class="sidebar-version" id="painel-version">16/04/2026 07:13</div>
+      <div class="sidebar-version" id="painel-version">16/04/2026 07:18</div>
     </div>
     <div class="filters">
 
       <div class="filter-group">
         <div class="filter-label">Bloco</div>
-        <div class="checkbox-group">
-          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 01" checked><span class="badge badge-01">Bloco 01</span></label>
-          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 02" checked><span class="badge badge-02">Bloco 02</span></label>
-          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 03" checked><span class="badge badge-03">Bloco 03</span></label>
-          <label class="checkbox-item"><input type="checkbox" name="bloco" value="Bloco 04" checked><span class="badge badge-04">Bloco 04</span></label>
+        <div class="bloco-chips">
+          <button class="bloco-chip" type="button" data-bloco="Bloco 01">Bloco 01</button>
+          <button class="bloco-chip" type="button" data-bloco="Bloco 02">Bloco 02</button>
+          <button class="bloco-chip" type="button" data-bloco="Bloco 03">Bloco 03</button>
+          <button class="bloco-chip" type="button" data-bloco="Bloco 04">Bloco 04</button>
         </div>
       </div>
 
@@ -789,7 +808,7 @@ new ResizeObserver(entries => {
    FILTER STATE
    ============================================================ */
 let filters = {
-  blocos:       new Set(['Bloco 01', 'Bloco 02', 'Bloco 03', 'Bloco 04']),
+  activeBloco:  null,
   sres:         new Set(), mesos: new Set(),
   municipio:    '', eixos: new Set(), curso: '',
   prioritarios: false, pop100: false
@@ -840,7 +859,7 @@ function applyFilters() {
 
 function _runFilters() {
   filteredData = allData.filter(d => {
-    if (!filters.blocos.has(d.bloco))                                      return false;
+    if (filters.activeBloco && d.bloco !== filters.activeBloco)             return false;
     if (filters.sres.size  > 0 && !filters.sres.has(d.sre))               return false;
     if (filters.mesos.size > 0 && !filters.mesos.has(d.dc_mesorregiao))   return false;
     if (filters.municipio  && d.municipio      !== filters.municipio)      return false;
@@ -1400,9 +1419,13 @@ const ssCurso = new SearchSelect('ss-curso',    v=>{filters.curso    =v;applyFil
 /* ============================================================
    EVENTOS
    ============================================================ */
-document.querySelectorAll('input[name=bloco]').forEach(cb=>{
-  cb.addEventListener('change',()=>{
-    filters.blocos=new Set([...document.querySelectorAll('input[name=bloco]:checked')].map(c=>c.value));
+document.querySelectorAll('.bloco-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const bloco = btn.dataset.bloco;
+    filters.activeBloco = filters.activeBloco === bloco ? null : bloco;
+    document.querySelectorAll('.bloco-chip').forEach(b =>
+      b.classList.toggle('active', b.dataset.bloco === filters.activeBloco)
+    );
     applyFilters();
   });
 });
@@ -1423,8 +1446,8 @@ document.querySelectorAll('.mode-btn').forEach(btn=>{
 });
 
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  filters={blocos:new Set(['Bloco 01','Bloco 02','Bloco 03','Bloco 04']),sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
-  document.querySelectorAll('input[name=bloco]').forEach(cb=>cb.checked=true);
+  filters={activeBloco:null,sres:new Set(),mesos:new Set(),municipio:'',eixos:new Set(),curso:'',prioritarios:false,pop100:false};
+  document.querySelectorAll('.bloco-chip').forEach(b=>b.classList.remove('active'));
   document.getElementById('toggle-prioritarios').checked=false;
   document.getElementById('toggle-pop100').checked=false;
   msSRE.reset();msMeso.reset();msEixo.reset();ssMunic.reset();ssCurso.reset();
@@ -1533,6 +1556,7 @@ function loadData() {
    ============================================================ */
 function updateFilterBadge() {
   const count =
+    (filters.activeBloco              ? 1 : 0) +
     (filters.sres.size        > 0 ? 1 : 0) +
     (filters.mesos.size       > 0 ? 1 : 0) +
     (filters.municipio            ? 1 : 0) +
