@@ -223,6 +223,17 @@ Atualizados dinamicamente conforme filtros:
 
 ---
 
+## Versionamento automático
+
+A cada execução do `deploy.sh`, a data e hora de publicação são injetadas automaticamente no `index.html` e exibidas abaixo do subtítulo "Priorização Curso × Município" na sidebar.
+
+- **Elemento HTML:** `<div class="sidebar-version" id="painel-version">—</div>`
+- **Formato exibido:** `DD/MM/AAAA HH:MM` (ex.: `16/04/2026 14:32`)
+- **Mecanismo:** `deploy.sh` usa Python para substituir o conteúdo do elemento via regex antes do commit, garantindo compatibilidade com Windows/Git Bash.
+- O placeholder `—` é exibido em ambiente de desenvolvimento local (sem deploy).
+
+---
+
 ## Entregável esperado
 
 ```

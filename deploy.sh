@@ -36,8 +36,21 @@ EOF
 
 cd "$ROOT"
 
+echo "==> [1b] Injetando versão no index.html..."
+python - << 'PYEOF'
+import re, datetime
+ts = datetime.datetime.now().strftime('%d/%m/%Y %H:%M')
+path = 'painel/index.html'
+with open(path, 'r', encoding='utf-8') as f:
+    content = f.read()
+content = re.sub(r'(id="painel-version">)[^<]*', r'\g<1>' + ts, content)
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(content)
+print('  Versao:', ts)
+PYEOF
+
 echo "==> [2/5] Commitando em main..."
-git add painel/dados/trilhas.json painel/index.html
+git add -u
 git diff --cached --quiet && echo "    Sem mudancas, nada a commitar." || \
   git commit -m "Atualiza painel (dados + UI)"
 
