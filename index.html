@@ -733,6 +733,9 @@ let mapMode      = 'sres';
 let mapLayer     = null;
 let mapFitted    = false;
 let listQuery    = '';
+let _listData       = [];   // dados completos da lista após filtros+sort (virtual scroll)
+let _listItemH      = 72;   // altura estimada de cada item em px (medida após 1ª renderização)
+let _listContainerH = 600;  // altura do #course-list (atualizada via ResizeObserver)
 
 let pop100Ids   = new Set();
 let pop100Names = new Map(); // id_municipio → nome (IBGE)
@@ -778,6 +781,10 @@ new ResizeObserver(() => {
     }
   }, 50);
 }).observe(document.getElementById('map-wrap'));
+
+new ResizeObserver(entries => {
+  _listContainerH = entries[0].contentRect.height || _listContainerH;
+}).observe(document.getElementById('course-list'));
 
 /* ============================================================
    FILTER STATE
@@ -1226,11 +1233,24 @@ function updateList() {
   } else if (selectedSRE !== null) {
     base = base.filter(d => normalizeSRE(d.sre) === selectedSRE);
   }
-  const sorted = base.sort((a, b) => {
-    const bo = (BLOCO_ORDER[a.bloco]||9) - (BLOCO_ORDER[b.bloco]||9);
-    return bo !== 0 ? bo : (a.ranking||9999) - (b.ranking||9999);
-  });
+  const sorted = base.sort((a, b) => a._sortKey - b._sortKey);
   renderList(sorted, listQuery);
+}
+
+function _listItemHTML(d) {
+  const bg = BLOCO_COLOR[d.bloco]||'#BFBEBE';
+  const fc = d.bloco === 'Bloco 03' ? '#1C1C1C' : '#fff';
+  return `<div class="list-item">
+      <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
+      <div class="list-body">
+        <div class="list-titulo" title="${d.municipio||'—'} — ${d.curso_tecnico||'—'}">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
+        <div class="list-loc" title="${d.dc_mesorregiao||'—'} · ${d.sre||'—'}">${d.dc_mesorregiao||'—'} · ${d.sre||'—'}</div>
+        <div class="list-meta">
+          <span style="background:${bg};color:${fc};padding:1px 7px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;">${d.bloco||''}</span>
+          ${d.fl_municipio_prioritario ? `<span class="list-prior">setores prioritários</span>` : ''}
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderList(data, q) {
@@ -1247,22 +1267,35 @@ function renderList(data, q) {
     );
   }
   cntEl.textContent = rows.length.toLocaleString('pt-BR') + ' itens';
-  if (rows.length === 0) { listEl.innerHTML = '<div class="list-empty">Nenhum resultado</div>'; return; }
-  listEl.innerHTML = rows.map(d => {
-    const bg = BLOCO_COLOR[d.bloco]||'#BFBEBE';
-    const fc = d.bloco === 'Bloco 03' ? '#1C1C1C' : '#fff'; // só amarelo precisa de texto escuro
-    return `<div class="list-item">
-      <div class="list-rank">${d.ranking!=null?d.ranking:'—'}</div>
-      <div class="list-body">
-        <div class="list-titulo" title="${d.municipio||'—'} — ${d.curso_tecnico||'—'}">${d.municipio||'—'} — ${d.curso_tecnico||'—'}</div>
-        <div class="list-loc" title="${d.dc_mesorregiao||'—'} · ${d.sre||'—'}">${d.dc_mesorregiao||'—'} · ${d.sre||'—'}</div>
-        <div class="list-meta">
-          <span style="background:${bg};color:${fc};padding:1px 7px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;">${d.bloco||''}</span>
-          ${d.fl_municipio_prioritario ? `<span class="list-prior">setores prioritários</span>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  _listData = rows;
+  // Pintar já assumindo scrollTop=0 (sem forçar layout agora)
+  _paintListWindow(listEl, 0);
+  // Diferir o reset de scroll + medição de altura para fora do ciclo de mutações
+  requestAnimationFrame(() => {
+    listEl.scrollTop = 0;
+    const first = listEl.querySelector('.list-item');
+    if (first) _listItemH = first.getBoundingClientRect().height || _listItemH;
+  });
+}
+
+const VLIST_BUFFER = 8; // itens extras acima/abaixo da viewport
+
+function _paintListWindow(listEl, forceScrollTop) {
+  const total = _listData.length;
+  if (total === 0) { listEl.innerHTML = '<div class="list-empty">Nenhum resultado</div>'; return; }
+
+  const scrollTop = forceScrollTop !== undefined ? forceScrollTop : listEl.scrollTop;
+  const viewH     = _listContainerH;
+  const startIdx  = Math.max(0,     Math.floor(scrollTop / _listItemH) - VLIST_BUFFER);
+  const endIdx    = Math.min(total, Math.ceil((scrollTop + viewH) / _listItemH) + VLIST_BUFFER);
+
+  const topH    = startIdx * _listItemH;
+  const bottomH = (total - endIdx) * _listItemH;
+
+  listEl.innerHTML =
+    `<div style="height:${topH}px;flex-shrink:0"></div>` +
+    _listData.slice(startIdx, endIdx).map(_listItemHTML).join('') +
+    `<div style="height:${bottomH}px;flex-shrink:0"></div>`;
 }
 
 /* ============================================================
@@ -1388,6 +1421,10 @@ document.getElementById('list-search').addEventListener('input',function(){
   updateList();
 });
 
+document.getElementById('course-list').addEventListener('scroll', function() {
+  _paintListWindow(this);
+});
+
 /* ============================================================
    CARREGAR DADOS
    ============================================================ */
@@ -1408,7 +1445,11 @@ function loadData() {
       pop100Names.set(d.id_municipio, d.nome);
       municPopMap.set(d.id_municipio, d.populacao);
     });
-    allData.forEach(d => { if (!municSREMap.has(d.id_municipio)) municSREMap.set(d.id_municipio, d.sre); });
+    allData.forEach(d => {
+      if (!municSREMap.has(d.id_municipio)) municSREMap.set(d.id_municipio, d.sre);
+      // Chave de ordenação pré-computada (bloco primeiro, depois ranking)
+      d._sortKey = (BLOCO_ORDER[d.bloco] || 9) * 10000 + (d.ranking || 9999);
+    });
 
     msSRE.setOptions(allData.map(d=>d.sre));
     msMeso.setOptions(allData.map(d=>d.dc_mesorregiao));
